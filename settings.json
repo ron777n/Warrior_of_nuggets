@@ -1,0 +1,21 @@
+{
+  "Screen": {
+    "Size": [1024, 512],
+    "Fps": 60
+  },
+  "Camera": {
+    "DefaultZoom": 1,
+    "MinZoom": 0.25,
+    "MaxZoom": 10
+  },
+  "Editor":
+  {
+    "TileSize": 64,
+    "GridColor": "black"
+  },
+  "Cursor": {
+    "Icon": "sprites/Cursor.png",
+    "ClickCord": [100, 0]
+  }
+}
+
