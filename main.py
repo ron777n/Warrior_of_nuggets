@@ -5,7 +5,7 @@ import pygame
 import json
 
 # from Game import Game
-from level_creator import Editor
+from editor import Editor
 
 with open("settings.json") as f:
     settings = json.load(f)
