@@ -6,12 +6,12 @@ import abc
 import pygame
 
 
-class BaseGui(pygame.sprite, abc.ABC):
+class BaseGui(pygame.sprite.Sprite, abc.ABC):
     """
     The base gui class
     """
 
-    def click(self, mouse_data: tuple[int, int, int]):
+    def click(self, mouse_data: tuple[tuple[int, int], tuple[int, int]]):
         """
         When user clicks the gui
         """
@@ -23,13 +23,14 @@ class BaseGui(pygame.sprite, abc.ABC):
         """
         pass
 
-    def change_rect(self, new_rect):
-        pass
-
     @property
     def image(self) -> pygame.surface.Surface:
         return pygame.surface.Surface((50, 50))
 
     @property
-    def rect(self):
-        return
+    def rect(self) -> pygame.rect.Rect:
+        return pygame.rect.Rect(0, 0, 50, 50)
+
+    @rect.setter
+    def rect(self, other: pygame.rect.Rect):
+        pass
