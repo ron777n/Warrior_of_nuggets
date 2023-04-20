@@ -5,6 +5,8 @@ import pygame
 from pygame.math import Vector2
 import json
 
+import Utils.Gui as Gui
+
 with open("settings.json") as f:
     settings = json.load(f)
 
@@ -16,6 +18,12 @@ class Editor:
     def __init__(self, ):
         self.display_surface = pygame.display.get_surface()
         self.origin = Vector2()
+        self.gui: list[Gui.BaseGui] = []
+        self.create_buttons()
+
+    def create_buttons(self):
+        a = Gui.BaseGui()
+        self.gui.append(a)
 
     def event_loop(self, delta_time):
         """
@@ -36,6 +44,7 @@ class Editor:
             if event.buttons[1] or \
                     (event.buttons[0] and pygame.key.get_mods() & pygame.KMOD_CTRL):
                 self.origin += Vector2(event.rel)
+
         elif event.type == pygame.MOUSEWHEEL:
             if event.x:
                 self.origin.x -= event.x * 64 / 2
@@ -44,6 +53,14 @@ class Editor:
                     self.origin.x -= event.y * 64 / 2
                 else:
                     self.origin.y -= event.y * 50
+
+        elif event.type == pygame.MOUSEBUTTONDOWN:
+            for button in self.gui:
+                button.click((event.pos, (event.button, 1)))
+
+        elif event.type == pygame.MOUSEBUTTONUP:
+            for button in self.gui:
+                button.click((event.pos, (event.button, 0)))
 
     def draw_tile_lines(self):
         """
@@ -66,6 +83,11 @@ class Editor:
             pygame.draw.line(self.display_surface, settings["Editor"]["GridColor"],
                              (0, y), (settings["Screen"]["Size"][0], y))
 
+    def load_interface(self):
+        button: Gui.BaseGui
+        for button in self.gui:
+            self.display_surface.blit(button.image, button.rect)
+
     def run(self, dt):
         """
         starts the game loop
@@ -74,4 +96,4 @@ class Editor:
         self.event_loop(dt)
         self.draw_tile_lines()
         pygame.draw.circle(self.display_surface, "black", self.origin, 10)
-
+        self.load_interface()
