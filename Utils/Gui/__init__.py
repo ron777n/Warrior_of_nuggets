@@ -13,7 +13,7 @@ class BaseGui(pygame.sprite.Sprite, abc.ABC):
     """
     _rect: pygame.Rect
 
-    def click(self, location: tuple[int, int], button_type: int, down: bool):
+    def click(self, location: tuple[int, int], button_type: int, down: bool) -> bool:
         """
         When user clicks the gui
         """
@@ -63,12 +63,14 @@ class Button(BaseGui):
         """
         pass
         """
+        collided = self.rect.collidepoint(location)
         if down:
-            if self.rect.collidepoint(location):
+            if collided:
                 self.clicked = True
                 self.on_click()
         else:
             self.clicked = False
+        return collided
 
     @property
     def image(self):

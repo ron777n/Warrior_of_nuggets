@@ -7,6 +7,7 @@ import json
 
 import Utils.Gui as Gui
 from Menus import EditorMenu
+from settings import *
 
 with open("settings.json") as f:
     settings = json.load(f)
@@ -16,9 +17,11 @@ class Editor:
     """
     The class that holds the loop
     """
+
     def __init__(self, ):
         self.display_surface = pygame.display.get_surface()
         self.origin = Vector2()
+        self.canvas_data: dict[tuple[int, int], any] = {}
 
         self.selection_index = 0
 
@@ -46,15 +49,18 @@ class Editor:
 
         elif event.type == pygame.MOUSEWHEEL:
             if event.x:
-                self.origin.x -= event.x * 64 / 2
+                self.origin.x -= event.x * TILE_SIZE / 2
             if event.y:
                 if pygame.key.get_mods() & pygame.KMOD_CTRL:
-                    self.origin.x -= event.y * 64 / 2
+                    self.origin.x -= event.y * TILE_SIZE / 2
                 else:
-                    self.origin.y -= event.y * 50
+                    self.origin.y -= event.y * TILE_SIZE / 2
 
         elif event.type == pygame.MOUSEBUTTONDOWN:
-            self.menu.click(event.pos, event.button, True)
+            mouse_data = event.pos, event.button, True
+            if self.menu.click(*mouse_data):
+                return
+            self.click(*mouse_data)
         elif event.type == pygame.MOUSEBUTTONUP:
             self.menu.click(event.pos, event.button, False)
 
@@ -97,3 +103,27 @@ class Editor:
         self.draw_tile_lines()
         pygame.draw.circle(self.display_surface, "black", self.origin, 10)
         self.menu.display()
+
+    def click(self, location: tuple[int, int], button_type: int, down: bool) -> bool:
+        if button_type != pygame.BUTTON_LEFT:
+            return False
+        tile_cords = int((location[0] - self.origin[0]) // TILE_SIZE), int((location[1] - self.origin[1]) // TILE_SIZE)
+
+        if tile_cords not in self.canvas_data:
+            self.canvas_data[tile_cords] = EditorTile()
+            print("planted", "egg", tile_cords)
+        else:
+            print("found", self.canvas_data[tile_cords], tile_cords)
+
+        return True
+
+
+class EditorTile:
+    """
+    The editor tile, handles what's in the specific tile
+    """
+
+    def __init__(self):
+        main_block = None
+
+        additions = []

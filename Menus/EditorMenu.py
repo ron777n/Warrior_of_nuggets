@@ -30,27 +30,49 @@ class Menu:
         generic_button_rect = pygame.Rect(self.rect.topleft, (self.rect.width / 2, self.rect.height / 2))
         button_margin = 5
 
-        button_1 = Gui.Button(generic_button_rect.copy().inflate(-button_margin, -button_margin),
-                              lambda: print("clicked"))
-        self.buttons.append(button_1)
-
-        # self.buttons.append(generic_button_rect.copy().inflate(-button_margin, -button_margin))
-        # self.buttons.append(generic_button_rect.move(self.rect.width / 2, 0).inflate(-button_margin, -button_margin))
-        # self.buttons.append(generic_button_rect.move(0, self.rect.height / 2).inflate(-button_margin, -button_margin))
-        # self.buttons.append(generic_button_rect.move(self.rect.width / 2, self.rect.height / 2).inflate(-button_margin, -button_margin))
+        buttons_data = (
+            (
+                generic_button_rect.copy(),
+                lambda: print("clicked 1"),
+                (255, 0, 0)
+            ),
+            (
+                generic_button_rect.move(self.rect.width / 2, 0),
+                lambda: print("clicked 2"),
+                (0, 255, 0)
+            ),
+            (
+                generic_button_rect.move(0, self.rect.height / 2),
+                lambda: print("clicked 3"),
+                (0, 0, 255)
+            ),
+            (
+                generic_button_rect.move(self.rect.width / 2, self.rect.height / 2),
+                lambda: print("clicked 4"),
+                (255, 255, 0)
+            ),
+        )
+        for rect, function, color in buttons_data:
+            image = pygame.surface.Surface((50, 50))
+            image.fill(color)
+            button_1 = Gui.Button(rect.inflate(-button_margin, -button_margin),
+                                  function, image=image)
+            self.buttons.append(button_1)
 
     def display(self):
         """
         puts everything on the screen
         """
-        # pygame.draw.rect(self.display_surface, "red", self.rect)
         for button in self.buttons:
             self.display_surface.blit(button.image, button.rect)
 
-    def click(self, location: tuple[int, int], button_type: int, down: bool):
+    def click(self, location: tuple[int, int], button_type: int, down: bool) -> bool:
         """
         clicks all the inputs on the menu
         """
+        r = False
         for button in self.buttons:
-            button.click(location, button_type, down)
+            if button.click(location, button_type, down):
+                r = True
+        return r
 
