@@ -101,7 +101,7 @@ class Editor:
         self.display_surface.fill("white")
         self.event_loop(dt)
         self.draw_tile_lines()
-        pygame.draw.circle(self.display_surface, "black", self.origin, 10)
+        # pygame.draw.circle(self.display_surface, "black", self.origin, 10)
         self.menu.display()
 
     def click(self, location: tuple[int, int], button_type: int, down: bool) -> bool:
