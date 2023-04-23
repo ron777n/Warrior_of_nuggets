@@ -7,8 +7,7 @@ import json
 # from Game import Game
 from editor import Editor
 
-with open("settings.json") as f:
-    settings = json.load(f)
+from settings import *
 
 
 class Main:
@@ -18,7 +17,7 @@ class Main:
 
     def __init__(self, ):
         pygame.init()
-        cam_shape = tuple(settings["Screen"]["Size"])
+        cam_shape = SCREEN_WIDTH, SCREEN_HEIGHT
         pygame.display.set_mode(cam_shape)
         self.display_surface = pygame.display.get_surface()
         self.clock = pygame.time.Clock()
