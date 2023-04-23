@@ -6,6 +6,7 @@ from pygame.math import Vector2
 import json
 
 import Utils.Gui as Gui
+from Menus import EditorMenu
 
 with open("settings.json") as f:
     settings = json.load(f)
@@ -18,12 +19,10 @@ class Editor:
     def __init__(self, ):
         self.display_surface = pygame.display.get_surface()
         self.origin = Vector2()
-        self.gui: list[Gui.BaseGui] = []
-        self.create_buttons()
 
-    def create_buttons(self):
-        a = Gui.BaseGui()
-        self.gui.append(a)
+        self.selection_index = 0
+
+        self.menu = EditorMenu.Menu()
 
     def event_loop(self, delta_time):
         """
@@ -55,12 +54,18 @@ class Editor:
                     self.origin.y -= event.y * 50
 
         elif event.type == pygame.MOUSEBUTTONDOWN:
-            for button in self.gui:
-                button.click((event.pos, (event.button, 1)))
-
+            self.menu.click(event.pos, event.button, True)
         elif event.type == pygame.MOUSEBUTTONUP:
-            for button in self.gui:
-                button.click((event.pos, (event.button, 0)))
+            self.menu.click(event.pos, event.button, False)
+
+        elif event.type == pygame.KEYDOWN:
+            if event.key in (pygame.K_RIGHT, pygame.K_LEFT, pygame.K_d, pygame.K_a):
+                self.selection_index = min(
+                    max(
+                        self.selection_index + (1 if event.key in (pygame.K_d, pygame.K_RIGHT) else -1),
+                        0),
+                    18)
+                print(self.selection_index)
 
     def draw_tile_lines(self):
         """
@@ -83,11 +88,6 @@ class Editor:
             pygame.draw.line(self.display_surface, settings["Editor"]["GridColor"],
                              (0, y), (settings["Screen"]["Size"][0], y))
 
-    def load_interface(self):
-        button: Gui.BaseGui
-        for button in self.gui:
-            self.display_surface.blit(button.image, button.rect)
-
     def run(self, dt):
         """
         starts the game loop
@@ -96,4 +96,4 @@ class Editor:
         self.event_loop(dt)
         self.draw_tile_lines()
         pygame.draw.circle(self.display_surface, "black", self.origin, 10)
-        self.load_interface()
+        self.menu.display()
