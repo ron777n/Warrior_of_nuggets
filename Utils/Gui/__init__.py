@@ -48,6 +48,7 @@ class Button(BaseGui):
     """
     simple object that is clickable
     """
+
     def __init__(self, rect: pygame.Rect, on_click, *groups, image: pygame.Surface = pygame.Surface((50, 50))):
         super().__init__(*groups)
         self.on_click: callable
@@ -81,3 +82,11 @@ class Button(BaseGui):
         img = self._image.copy()
         img.set_alpha(alpha)
         return img
+
+
+class Menu(abc.ABC):
+    def display(self, display_surface: pygame.surface.SurfaceType):
+        ...
+
+    def click(self, location: tuple[int, int], button_type: int, down: bool) -> bool:
+        ...

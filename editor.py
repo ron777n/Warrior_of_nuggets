@@ -1,6 +1,8 @@
 """
 This is for the level creator.
 """
+import itertools
+
 import pygame
 import pymunk
 from pygame.math import Vector2
@@ -25,17 +27,20 @@ class Editor:
         self.selected_block = None
         self.display_surface = pygame.display.get_surface()
         self.origin = Vector2()
-        self.canvas_data: dict[tuple[int, int], EditorTile] = {}
+        self.canvas_data: dict[tuple[int, int], EditorMenu.EditorTile] = {}
         self.space = pymunk.Space()
         self.space.gravity = (0, 10)
+        self.settings = EditorMenu.TileMenu()
 
         # self.selection_index = 0
 
         self.testing = False
-        self.menu = EditorMenu.Menu(self.set_block, Block, SlipperyBlock)
+        self.menu = EditorMenu.EditorMenu(self.set_block, Block, SlipperyBlock)
 
     def set_block(self, block):
-        self.selected_block = [block, (), {"body_type": pymunk.Body.DYNAMIC}]
+        self.selected_block = [block, (),
+                               {"body_type": (pymunk.Body.DYNAMIC,
+                                              itertools.cycle((pymunk.Body.STATIC, pymunk.Body.DYNAMIC)))}]
 
     def event_loop(self, delta_time):
         """
@@ -70,11 +75,18 @@ class Editor:
 
         elif event.type == pygame.MOUSEBUTTONDOWN:
             mouse_data = event.pos, event.button, True
-            if self.menu.click(*mouse_data):
-                return
-            self.click(*mouse_data)
+            if self.settings.active:
+                if not self.settings.click(*mouse_data):
+                    self.click(*mouse_data)
+            elif not self.menu.click(*mouse_data):
+                self.click(*mouse_data)
+
         elif event.type == pygame.MOUSEBUTTONUP:
-            self.menu.click(event.pos, event.button, False)
+            mouse_data = event.pos, event.button, False
+            if self.settings.active:
+                self.settings.click(*mouse_data)
+            else:
+                self.menu.click(*mouse_data)
 
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_SPACE:
@@ -108,20 +120,20 @@ class Editor:
                              (0, y), (settings["Screen"]["Size"][0], y))
 
     def click(self, location: tuple[int, int], button_type: int, down: bool) -> bool:
-        # if button_type != pygame.BUTTON_LEFT:
-        #     return False
+        if not down:
+            return False
         tile_cords = int((location[0] - self.origin[0]) // TILE_SIZE), int((location[1] - self.origin[1]) // TILE_SIZE)
 
         if tile_cords not in self.canvas_data:
-            if self.selected_block is not None and button_type == pygame.BUTTON_LEFT:
-                self.canvas_data[tile_cords] = EditorTile(self.selected_block)
+            if self.selected_block is not None:
+                if button_type == pygame.BUTTON_LEFT:
+                    self.canvas_data[tile_cords] = EditorMenu.EditorTile(self.selected_block)
         elif button_type == pygame.BUTTON_RIGHT:
             tile = self.canvas_data[tile_cords]
-            print(id(tile.main_block[2]))
-            if tile.main_block[2]["body_type"] == pymunk.Body.DYNAMIC:
-                tile.main_block[2]["body_type"] = pymunk.Body.STATIC
-            elif tile.main_block[2]["body_type"] == pymunk.Body.STATIC:
-                tile.main_block[2]["body_type"] = pymunk.Body.DYNAMIC
+            if self.settings and self.settings.current == tile:
+                self.settings.active = False
+            else:
+                self.settings.reset(tile)
 
         return True
 
@@ -134,44 +146,34 @@ class Editor:
         self.draw_tile_lines()
         self.draw_blocks()
         pygame.draw.circle(self.display_surface, "black", self.origin, 10)
-        self.menu.display()
+        if self.settings.active:
+            self.settings.display(self.display_surface)
+        else:
+            self.menu.display(self.display_surface)
         self.space.step(dt if self.testing else 0)
 
     def draw_blocks(self):
         if self.testing:
             for block in self.active_blocks:
                 self.display_surface.blit(block.image, block.rect)
-        else:
-            for coordinate, data in self.canvas_data.items():
-                rect = pygame.rect.Rect(coordinate[0] * 64 + self.origin[0],
-                                        coordinate[1] * 64 + self.origin[1],
-                                        TILE_SIZE, TILE_SIZE)
-                self.display_surface.blit(
-                    pygame.transform.scale(data.main_block[0].base_image, (TILE_SIZE, TILE_SIZE)), rect)
+            return
+        for coordinate, tile in self.canvas_data.items():
+            rect = pygame.rect.Rect(coordinate[0] * 64 + self.origin[0],
+                                    coordinate[1] * 64 + self.origin[1],
+                                    TILE_SIZE, TILE_SIZE)
+            self.display_surface.blit(
+                pygame.transform.scale(tile.image, (TILE_SIZE, TILE_SIZE)), rect)
 
     def spawn_blocks(self):
         for coordinate, tile in self.canvas_data.items():
             rect = pygame.rect.Rect(coordinate[0] * 64 + self.origin[0],
                                     coordinate[1] * 64 + self.origin[1],
                                     TILE_SIZE, TILE_SIZE)
-            block = tile.main_block[0](self.space, rect, *tile.main_block[1], **tile.main_block[2])
+            block = tile.main_block[0](self.space, rect, *tile.main_block[1],
+                                       **{name: val for name, (val, _) in tile.main_block[2].items()})
             self.active_blocks.append(block)
 
     def clear(self):
         for block in self.active_blocks:
             self.space.remove(block, block.shape)
         self.active_blocks.clear()
-
-
-class EditorTile:
-    """
-    The editor tile, handles what's in the specific tile
-    """
-
-    def __init__(self, selection):
-        self.main_block: tuple[type[Solid], tuple, dict] = selection
-        self.main_block = (*self.main_block[:2], self.main_block[2].copy())
-
-        print(selection)
-
-        additions = []
