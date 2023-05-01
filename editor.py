@@ -31,11 +31,25 @@ class Editor:
         self.space = pymunk.Space()
         self.space.gravity = (0, 10)
         self.settings = EditorMenu.TileMenu()
+        self.player = (0, 0)
 
         # self.selection_index = 0
 
         self.testing = False
-        self.menu = EditorMenu.EditorMenu(self.set_block, Block, SlipperyBlock)
+        self.menu = EditorMenu.EditorMenu(
+            (
+                self.set_block,
+                self.set_player,
+                self.delete_block
+            ),
+            Block, SlipperyBlock
+        )
+
+    def delete_block(self):
+        self.selected_block = "delete"
+
+    def set_player(self):
+        self.selected_block = "player"
 
     def set_block(self, block):
         self.selected_block = [block, (),
@@ -125,9 +139,15 @@ class Editor:
         tile_cords = int((location[0] - self.origin[0]) // TILE_SIZE), int((location[1] - self.origin[1]) // TILE_SIZE)
 
         if tile_cords not in self.canvas_data:
-            if self.selected_block is not None:
-                if button_type == pygame.BUTTON_LEFT:
-                    self.canvas_data[tile_cords] = EditorMenu.EditorTile(self.selected_block)
+            if button_type != pygame.BUTTON_LEFT:
+                return False
+            if isinstance(self.selected_block, list):
+                self.canvas_data[tile_cords] = EditorMenu.EditorTile(self.selected_block)
+            elif self.selected_block == "player":
+                self.player = tile_cords
+        elif self.selected_block == "delete" and button_type == pygame.BUTTON_LEFT:
+            del self.canvas_data[tile_cords]
+
         elif button_type == pygame.BUTTON_RIGHT:
             tile = self.canvas_data[tile_cords]
             if self.settings and self.settings.current == tile:
@@ -145,7 +165,9 @@ class Editor:
         self.event_loop(dt)
         self.draw_tile_lines()
         self.draw_blocks()
-        pygame.draw.circle(self.display_surface, "black", self.origin, 10)
+        self.draw_player()
+
+        # self.display_surface.blit()
         if self.settings.active:
             self.settings.display(self.display_surface)
         else:
@@ -177,3 +199,8 @@ class Editor:
         for block in self.active_blocks:
             self.space.remove(block, block.shape)
         self.active_blocks.clear()
+
+    def draw_player(self):
+        rect = PLAYER_HEAD.get_rect().move(
+            self.player[0] * 64 + self.origin[0], self.player[1] * 64 + self.origin[1])
+        self.display_surface.blit(pygame.transform.scale(PLAYER_HEAD, (64, 64)), rect)

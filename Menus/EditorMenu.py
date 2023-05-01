@@ -9,7 +9,7 @@ import pymunk
 
 from physics.objects import Solid, BaseObject
 from settings import *
-from Utils import Gui
+from Utils import Gui, image_utils
 
 margin = 6
 width = 180
@@ -21,36 +21,47 @@ class EditorMenu(Gui.Menu):
     The menu class for the editor
     """
 
-    def __init__(self, set_function: callable, *classes: type[BaseObject]):
+    def __init__(self, set_functions: tuple[callable, ...], *classes: type[BaseObject]):
         self.selected_block = None
         self.rect: pygame.Rect = pygame.Rect(0, 0, 50, 50)
         self.buttons: list[Gui.BaseGui] = []
+        self.buttons_i = 1
 
         top_left = (SCREEN_WIDTH - width - margin, SCREEN_HEIGHT - height - margin)
         self.rect = pygame.Rect(top_left, (width, height))
 
-        self.create_buttons(set_function, *classes)
+        self.button_margin = 5
+        self.columns = 2
+        self.box_size = width / (self.columns + 1)
 
-    def create_buttons(self, set_class, *classes):
+        self.create_buttons(set_functions, *classes)
+
+    def add_button(self, func: (callable, Iterable, dict), img):
+        rect = pygame.rect.Rect(
+            self.rect.left + self.box_size * (self.buttons_i % self.columns),
+            self.rect.top + self.box_size * ((self.buttons_i - 1) // self.columns),
+            self.box_size,
+            self.box_size)
+        button_1 = Gui.Button(rect.inflate(-self.button_margin, -self.button_margin),
+                              lambda: func[0](*func[1], **func[2]), image=img)
+        self.buttons.append(button_1)
+        self.buttons_i += 1
+
+    def create_buttons(self, functions, *classes):
         """
         just creates all the buttons
         """
-        # menu area
-        columns = 2
+        create_block = functions[0]
+        set_player = functions[1]
+        delete_block = functions[2]
 
-        # button areas
-        button_margin = 5
+        self.add_button((set_player, (), {}), PLAYER_HEAD)
+        red = pygame.Surface((64, 64))
+        red.fill("red")
+        self.add_button((delete_block, (), {}), red)
 
-        box_size = width / (columns + 1)
-        for i, class_type in enumerate(classes, start=1):
-            rect = pygame.rect.Rect(
-                self.rect.left + box_size * (i % columns),
-                self.rect.top + box_size * ((i - 1) // columns),
-                box_size,
-                box_size)
-            button_1 = Gui.Button(rect.inflate(-button_margin, -button_margin),
-                                  lambda save=class_type: set_class(save), image=class_type.base_image)
-            self.buttons.append(button_1)
+        for i, class_type in enumerate(classes, start=3):
+            self.add_button((create_block, (class_type,), {}), class_type.base_image)
 
     def display(self, display_surface):
         """
@@ -129,6 +140,10 @@ class TileMenu(Gui.Menu):
             display_surface.blit(button.image, button.rect)
             img = pygame.surface.Surface(button.rect.size)
             img.fill("red")
+            rect = img.get_rect().copy()
+            text = image_utils.Text(str(val)).wrap(rect.size)
+
+            img.blit(text, rect)
             display_surface.blit(img, button.rect.move((width // 2, 0)))
 
     def click(self, location: tuple[int, int], button_type: int, down: bool) -> bool:

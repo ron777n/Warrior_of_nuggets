@@ -16,6 +16,9 @@
   "Cursor": {
     "Icon": "sprites/Cursor.png",
     "ClickCord": [100, 0]
+  },
+  "Player": {
+    "Head": "sprites/icon.png"
   }
 }
 
