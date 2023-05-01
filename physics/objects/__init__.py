@@ -9,7 +9,6 @@ from Utils import image_utils
 
 
 class BaseObject(pymunk.Body):
-
     @property
     def image(self) -> pygame.surface.Surface:
         return pygame.surface.Surface((50, 50))
@@ -24,21 +23,19 @@ class Solid(BaseObject):
         self.shape.mass = 1
         self.position = rect.center
         self._rect = rect
+        self.original_size = rect.size
         space.add(self, self.shape)
 
     @property
     def rect(self) -> pygame.rect.Rect:
-        return self._rect
+        return self._rect.copy()
 
     @property
     def image(self):
-        img = self.base_image
-        if self._rect.size != (0, 0):
-            img = pygame.transform.scale(img, self._rect.size)
-        # img = pygame.transform.rotate(img, -self.rotation_vector.angle_degrees)
-        if self._rect.size != (img_rect_size := img.get_rect().size):
-            self._rect.size = img_rect_size[0] + self._rect.size[0] // 2, img_rect_size[1] + self._rect.size[1] // 2
-        self._rect.center = self.position
+        img = pygame.transform.scale(self.base_image.copy(), (self.original_size[0], self.original_size[1]))
+        img = pygame.transform.rotate(img, int(-self.rotation_vector.angle_degrees))
+        self._rect.size = img.get_size()
+        self._rect.center = self.position[0], self.position[1]
         return img
 
 

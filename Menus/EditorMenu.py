@@ -1,6 +1,7 @@
 """
 The menu for the editor
 """
+import itertools
 import typing
 from collections.abc import Iterable
 
@@ -11,8 +12,8 @@ from physics.objects import Solid, BaseObject
 from settings import *
 from Utils import Gui, image_utils
 
-margin = 6
-width = 180
+margin = 0
+width = 192
 height = SCREEN_HEIGHT - margin
 
 
@@ -74,10 +75,9 @@ class EditorMenu(Gui.Menu):
         """
         clicks all the inputs on the menu
         """
-        r = False
+        r = self.rect.collidepoint(location)
         for button in self.buttons:
-            if button.click(location, button_type, down):
-                r = True
+            r = button.click(location, button_type, down) or r
         return r
 
 
@@ -86,8 +86,9 @@ class EditorTile:
     The editor tile, handles what's in the specific tile
     """
 
-    def __init__(self, selection):
-        self.main_block: tuple[type[Solid], tuple, dict[any, tuple[any, generator]]] = selection
+    def __init__(self, selection: tuple[type(Solid), tuple, dict[any, tuple[any, tuple]]]):
+        self.main_block: tuple[type(Solid), tuple, dict[any, list[any, Iterable]]] = \
+            (selection[0], selection[1], {a: [b[0], itertools.cycle(b[1])] for a, b in selection[2].items()})
         self.main_block = (*self.main_block[:2], self.main_block[2].copy())
 
         additions = []
@@ -116,13 +117,12 @@ class TileMenu(Gui.Menu):
         box_size = width / (columns + 1)
         for i, (name, (value, possible_values)) in \
                 enumerate(tile.main_block[2].items(), start=1):
-            print(name, value, possible_values, type(possible_values))
+            # print(name, value, possible_values, type(possible_values))
             func: callable = lambda: 0
             if isinstance(possible_values, Iterable):
                 def func():
                     a = next(possible_values)
-                    print(a)
-                    tile.main_block[2][name] = (a, possible_values)
+                    tile.main_block[2][name][:] = [a, possible_values]
 
             rect = pygame.rect.Rect(
                 self.rect.left + box_size * (i % columns),
@@ -133,21 +133,22 @@ class TileMenu(Gui.Menu):
                 rect.inflate(-button_margin, -button_margin),
                 func
             )
-            self.buttons[button_1] = tile
+            self.buttons[button_1] = tile.main_block[2][name]
 
-    def display(self, display_surface: pygame.surface.SurfaceType):
-        for button, val in self.buttons.items():
+    def display(self, display_surface: pygame.surface.Surface):
+        for button, value in self.buttons.items():
             display_surface.blit(button.image, button.rect)
             img = pygame.surface.Surface(button.rect.size)
+            # print((button, value))
             img.fill("red")
             rect = img.get_rect().copy()
-            text = image_utils.Text(str(val)).wrap(rect.size)
+            text = image_utils.Text(str(value[0])).wrap(rect.size)
 
             img.blit(text, rect)
             display_surface.blit(img, button.rect.move((width // 2, 0)))
 
     def click(self, location: tuple[int, int], button_type: int, down: bool) -> bool:
-        r = False
+        r = self.rect.collidepoint(location)
         for button in self.buttons:
-            r = r or button.click(location, button_type, down)
+            r = button.click(location, button_type, down) or r
         return r

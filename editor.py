@@ -1,14 +1,13 @@
 """
 This is for the level creator.
 """
-import itertools
 
 import pygame
 import pymunk
 from pygame.math import Vector2
 import json
+from pymunk.pygame_util import DrawOptions
 
-import Utils.Gui as Gui
 from Menus import EditorMenu
 from physics.objects import Block, SlipperyBlock, Solid
 from settings import *
@@ -26,6 +25,8 @@ class Editor:
         self.active_blocks = []
         self.selected_block = None
         self.display_surface = pygame.display.get_surface()
+
+        self.draw_options = DrawOptions(self.display_surface)
         self.origin = Vector2()
         self.canvas_data: dict[tuple[int, int], EditorMenu.EditorTile] = {}
         self.space = pymunk.Space()
@@ -52,9 +53,8 @@ class Editor:
         self.selected_block = "player"
 
     def set_block(self, block):
-        self.selected_block = [block, (),
-                               {"body_type": (pymunk.Body.DYNAMIC,
-                                              itertools.cycle((pymunk.Body.STATIC, pymunk.Body.DYNAMIC)))}]
+        button_type = (pymunk.Body.DYNAMIC, (pymunk.Body.STATIC, pymunk.Body.DYNAMIC))
+        self.selected_block = (block, (),  {"body_type": button_type})
 
     def event_loop(self, delta_time):
         """
@@ -76,7 +76,10 @@ class Editor:
                     (event.buttons[0] and pygame.key.get_mods() & pygame.KMOD_CTRL):
                 self.origin += Vector2(event.rel)
             elif event.buttons[0]:
-                self.click(event.pos, 1, True)
+                mouse_data = event.pos, 1, True
+                if (self.settings.active and not self.settings.rect.collidepoint(event.pos)) or \
+                        not self.menu.rect.collidepoint(event.pos):
+                    self.click(*mouse_data)
 
         elif event.type == pygame.MOUSEWHEEL:
             if event.x:
@@ -85,22 +88,17 @@ class Editor:
                 if pygame.key.get_mods() & pygame.KMOD_CTRL:
                     self.origin.x -= event.y * TILE_SIZE / 2
                 else:
-                    self.origin.y -= event.y * TILE_SIZE / 2
+                    self.origin.y += event.y * TILE_SIZE / 2
 
         elif event.type == pygame.MOUSEBUTTONDOWN:
             mouse_data = event.pos, event.button, True
-            if self.settings.active:
-                if not self.settings.click(*mouse_data):
-                    self.click(*mouse_data)
-            elif not self.menu.click(*mouse_data):
+            if not ((self.settings.active and self.settings.click(*mouse_data)) or self.menu.click(*mouse_data)):
                 self.click(*mouse_data)
 
         elif event.type == pygame.MOUSEBUTTONUP:
             mouse_data = event.pos, event.button, False
-            if self.settings.active:
-                self.settings.click(*mouse_data)
-            else:
-                self.menu.click(*mouse_data)
+            if (self.settings.active and not self.settings.click(*mouse_data)) or not self.menu.click(*mouse_data):
+                self.click(*mouse_data)
 
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_SPACE:
@@ -141,7 +139,7 @@ class Editor:
         if tile_cords not in self.canvas_data:
             if button_type != pygame.BUTTON_LEFT:
                 return False
-            if isinstance(self.selected_block, list):
+            if isinstance(self.selected_block, tuple):
                 self.canvas_data[tile_cords] = EditorMenu.EditorTile(self.selected_block)
             elif self.selected_block == "player":
                 self.player = tile_cords
@@ -166,6 +164,7 @@ class Editor:
         self.draw_tile_lines()
         self.draw_blocks()
         self.draw_player()
+        # self.space.debug_draw(self.draw_options)
 
         # self.display_surface.blit()
         if self.settings.active:
@@ -179,18 +178,16 @@ class Editor:
             for block in self.active_blocks:
                 self.display_surface.blit(block.image, block.rect)
             return
-        for coordinate, tile in self.canvas_data.items():
-            rect = pygame.rect.Rect(coordinate[0] * 64 + self.origin[0],
-                                    coordinate[1] * 64 + self.origin[1],
-                                    TILE_SIZE, TILE_SIZE)
+        for coordinates, tile in self.canvas_data.items():
+            rect = pygame.rect.Rect(self.get_rel_cords(coordinates),
+                                    (TILE_SIZE, TILE_SIZE))
             self.display_surface.blit(
                 pygame.transform.scale(tile.image, (TILE_SIZE, TILE_SIZE)), rect)
 
     def spawn_blocks(self):
-        for coordinate, tile in self.canvas_data.items():
-            rect = pygame.rect.Rect(coordinate[0] * 64 + self.origin[0],
-                                    coordinate[1] * 64 + self.origin[1],
-                                    TILE_SIZE, TILE_SIZE)
+        for coordinates, tile in self.canvas_data.items():
+            rect = pygame.rect.Rect(self.get_rel_cords(coordinates),
+                                    (TILE_SIZE, TILE_SIZE))
             block = tile.main_block[0](self.space, rect, *tile.main_block[1],
                                        **{name: val for name, (val, _) in tile.main_block[2].items()})
             self.active_blocks.append(block)
@@ -200,7 +197,9 @@ class Editor:
             self.space.remove(block, block.shape)
         self.active_blocks.clear()
 
+    def get_rel_cords(self, cords) -> (int, int):
+        return cords[0] * TILE_SIZE + self.origin[0], cords[1] * TILE_SIZE + self.origin[1]
+
     def draw_player(self):
-        rect = PLAYER_HEAD.get_rect().move(
-            self.player[0] * 64 + self.origin[0], self.player[1] * 64 + self.origin[1])
-        self.display_surface.blit(pygame.transform.scale(PLAYER_HEAD, (64, 64)), rect)
+        rect = PLAYER_HEAD.get_rect().move(self.get_rel_cords(self.player))
+        self.display_surface.blit(pygame.transform.scale(PLAYER_HEAD, (TILE_SIZE, TILE_SIZE)), rect)
