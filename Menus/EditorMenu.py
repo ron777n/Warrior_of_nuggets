@@ -33,7 +33,7 @@ class EditorMenu(Gui.Menu):
 
         self.button_margin = 5
         self.columns = 2
-        self.box_size = width / (self.columns + 1)
+        self.box_size = width / self.columns
 
         self.create_buttons(set_functions, *classes)
 
