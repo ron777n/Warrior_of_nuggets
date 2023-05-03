@@ -167,7 +167,7 @@ class Editor:
     def draw_blocks(self):
         if self.testing:
             for block in self.active_blocks:
-                self.display_surface.blit(block.image, block.rect)
+                self.display_surface.blit(block.image, block.rect.move(*self.origin))
             return
         for coordinates, tile in self.canvas_data.items():
             rect = pygame.rect.Rect(self.get_rel_cords(coordinates),
@@ -177,7 +177,7 @@ class Editor:
 
     def spawn_blocks(self):
         for coordinates, tile in self.canvas_data.items():
-            rect = pygame.rect.Rect(self.get_rel_cords(coordinates),
+            rect = pygame.rect.Rect(self.get_rel_cords(coordinates, False),
                                     (TILE_SIZE, TILE_SIZE))
             block = tile.main_block[0](self.space, rect, *tile.main_block[1],
                                        **{name: val for name, (val, _) in tile.main_block[2].items()})
@@ -188,8 +188,9 @@ class Editor:
             self.space.remove(block, block.shape)
         self.active_blocks.clear()
 
-    def get_rel_cords(self, cords) -> (int, int):
-        return cords[0] * TILE_SIZE + self.origin[0], cords[1] * TILE_SIZE + self.origin[1]
+    def get_rel_cords(self, cords, origin=True) -> (int, int):
+        return cords[0] * TILE_SIZE + (self.origin[0] if origin else 0),\
+               cords[1] * TILE_SIZE + (self.origin[1] if origin else 0)
 
     def draw_player(self):
         rect = PLAYER_HEAD.get_rect().move(self.get_rel_cords(self.player))
