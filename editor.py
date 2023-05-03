@@ -159,18 +159,9 @@ class Editor:
         """
         starts the game loop
         """
-        self.display_surface.fill("white")
+        self.draw()
         self.event_loop(dt)
-        self.draw_tile_lines()
-        self.draw_blocks()
-        self.draw_player()
-        # self.space.debug_draw(self.draw_options)
-
-        # self.display_surface.blit()
-        if self.settings.active:
-            self.settings.display(self.display_surface)
-        else:
-            self.menu.display(self.display_surface)
+        self.draw_gui()
         self.space.step(dt if self.testing else 0)
 
     def draw_blocks(self):
@@ -203,3 +194,15 @@ class Editor:
     def draw_player(self):
         rect = PLAYER_HEAD.get_rect().move(self.get_rel_cords(self.player))
         self.display_surface.blit(pygame.transform.scale(PLAYER_HEAD, (TILE_SIZE, TILE_SIZE)), rect)
+
+    def draw(self):
+        self.display_surface.fill("white")
+        self.draw_tile_lines()
+        self.draw_blocks()
+        self.draw_player()
+
+    def draw_gui(self):
+        if self.settings.active:
+            self.settings.display(self.display_surface)
+        else:
+            self.menu.display(self.display_surface)
