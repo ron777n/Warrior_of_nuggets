@@ -85,7 +85,7 @@ class Button(BaseGui):
 
 
 class Menu(abc.ABC):
-    def display(self, display_surface: pygame.surface.SurfaceType):
+    def display(self, display_surface: pygame.surface.Surface):
         ...
 
     def click(self, location: tuple[int, int], button_type: int, down: bool) -> bool:

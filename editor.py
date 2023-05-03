@@ -9,7 +9,7 @@ import json
 from pymunk.pygame_util import DrawOptions
 
 from Menus import EditorMenu
-from physics.objects import Block, SlipperyBlock, Solid
+from physics.objects import Block, SlipperyBlock
 from settings import *
 
 with open("settings.json") as f:
@@ -33,8 +33,6 @@ class Editor:
         self.space.gravity = (0, 10)
         self.settings = EditorMenu.TileMenu()
         self.player = (0, 0)
-
-        # self.selection_index = 0
 
         self.testing = False
         self.menu = EditorMenu.EditorMenu(
@@ -113,9 +111,16 @@ class Editor:
 
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_SPACE:
+                if not self.testing:
+                    self.testing = True
+                    self.spawn_blocks()
+                else:
+                    self.testing = False
+                    self.clear()
+            if event.key == pygame.K_LALT:
+                self.load_level()
+            if event.key == pygame.K_LCTRL:
                 self.save_level()
-                return
-
 
     def draw_tile_lines(self):
         """
@@ -210,13 +215,9 @@ class Editor:
         self.draw_player()
 
     def draw_gui(self):
-        background = pygame.Surface((1000, 1000))
-        background.fill("BLACK")
         if self.settings.active:
-            self.display_surface.blit(background, self.settings.rect)
             self.settings.display(self.display_surface)
         else:
-            self.display_surface.blit(background, self.menu.scroll_rect)
             self.menu.display(self.display_surface)
 
     def save_level(self):
@@ -226,6 +227,33 @@ class Editor:
         for location, data in self.canvas_data.items():
             # print(location, data.json)
             save_json["Level"][str(location)] = data.json
-        print(save_json)
         with open("Egg.lvl", "w") as file:
             json.dump(save_json, file)
+
+    def load_level(self):
+        with open("Egg.lvl", "r") as file:
+            loaded = json.load(file)
+
+        self.canvas_data.clear()
+
+        self.player = tuple(loaded["Player"])
+        # button_type = (pymunk.Body.DYNAMIC, (pymunk.Body.STATIC, pymunk.Body.DYNAMIC))
+        # self.selected_block = (block, (), {"body_type": button_type})
+
+        for location, data in loaded["Level"].items():
+            block = None
+            if data[0] == "Block":
+                block = Block
+            elif data[0] == "SlipperyBlock":
+                block = SlipperyBlock
+            else:
+                block = Block
+
+            blocks_data = {}
+            for block_data_type, value in data[2].items():
+                if block_data_type == "body_type":
+                    data[2][block_data_type] = (value, (pymunk.Body.STATIC, pymunk.Body.DYNAMIC))
+                else:
+                    print(block_data_type, value)
+
+            self.canvas_data[(int(location[1]), int(location[4]))] = EditorMenu.EditorTile((block, data[1], data[2]))
