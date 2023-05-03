@@ -41,7 +41,8 @@ class Editor:
             (
                 self.set_block,
                 self.set_player,
-                self.delete_block
+                self.delete_block,
+                self.start
             ),
             Block, SlipperyBlock
         )
@@ -51,6 +52,16 @@ class Editor:
 
     def set_player(self):
         self.selected_block = "player"
+
+    def start(self):
+        self.selected_block = "start"
+        if not self.testing:
+            self.testing = True
+            self.spawn_blocks()
+        else:
+            self.testing = False
+            self.clear()
+            # self.space.remove()
 
     def set_block(self, block):
         button_type = (pymunk.Body.DYNAMIC, (pymunk.Body.STATIC, pymunk.Body.DYNAMIC))
@@ -78,7 +89,7 @@ class Editor:
             elif event.buttons[0]:
                 mouse_data = event.pos, 1, True
                 if (self.settings.active and not self.settings.rect.collidepoint(event.pos)) or \
-                        not self.menu.rect.collidepoint(event.pos):
+                        not self.menu.scroll_rect.collidepoint(event.pos):
                     self.click(*mouse_data)
 
         elif event.type == pygame.MOUSEWHEEL:
@@ -104,13 +115,7 @@ class Editor:
             if event.key == pygame.K_SPACE:
                 self.save_level()
                 return
-                if not self.testing:
-                    self.testing = True
-                    self.spawn_blocks()
-                else:
-                    self.testing = False
-                    self.clear()
-                    # self.space.remove()
+
 
     def draw_tile_lines(self):
         """
@@ -211,7 +216,7 @@ class Editor:
             self.display_surface.blit(background, self.settings.rect)
             self.settings.display(self.display_surface)
         else:
-            self.display_surface.blit(background, self.menu.rect)
+            self.display_surface.blit(background, self.menu.scroll_rect)
             self.menu.display(self.display_surface)
 
     def save_level(self):

@@ -14,8 +14,9 @@ from Utils import Gui, image_utils
 
 margin = 0
 width = 192
+width1 = 128
 height = SCREEN_HEIGHT - margin
-
+height1 = 128
 
 class EditorMenu(Gui.Menu):
     """
@@ -24,30 +25,45 @@ class EditorMenu(Gui.Menu):
 
     def __init__(self, set_functions: tuple[callable, ...], *classes: type[BaseObject]):
         self.selected_block = None
-        self.rect: pygame.Rect = pygame.Rect(0, 0, 50, 50)
         self.buttons: list[Gui.BaseGui] = []
         self.buttons_i = 1
+        self.object_i = 1
 
         top_left = (SCREEN_WIDTH - width - margin, SCREEN_HEIGHT - height - margin)
-        self.rect = pygame.Rect(top_left, (width, height))
+        self.scroll_rect = pygame.Rect(top_left, (width, height))
+        top_left_1 = (SCREEN_WIDTH - width - margin - width1, 0)
+        self.button_rect = pygame.Rect(top_left_1, (width1, height1))
 
         self.button_margin = 5
-        self.columns = 2
+        self.columns = 3
+        self.columns1 = 2
         self.box_size = width / self.columns
-        self.background = pygame.transform.scale(pygame.image.load("sprites/Gui/BlocksMenu.png"), self.rect.size)
+        self.background = pygame.transform.scale(pygame.image.load("sprites/Gui/BlocksMenu.png"), self.scroll_rect.size)
+        self.background1 = pygame.transform.scale(pygame.image.load("sprites/Gui/BlocksMenu.png"), self.button_rect.size)
 
         self.create_buttons(set_functions, *classes)
 
     def add_button(self, func: (callable, Iterable, dict), img):
         rect = pygame.rect.Rect(
-            self.rect.left + self.box_size * (self.buttons_i % self.columns),
-            self.rect.top + self.box_size * ((self.buttons_i - 1) // self.columns),
+            self.scroll_rect.left + self.box_size * (self.buttons_i % self.columns),
+            self.scroll_rect.top + self.box_size * ((self.buttons_i - 1) // self.columns),
             self.box_size,
             self.box_size)
         button_1 = Gui.Button(rect.inflate(-self.button_margin, -self.button_margin),
                               lambda: func[0](*func[1], **func[2]), image=img)
         self.buttons.append(button_1)
         self.buttons_i += 1
+
+    def add_object(self, func: (callable, Iterable, dict), img):
+        rect = pygame.rect.Rect(
+            self.button_rect.left + self.box_size * (self.object_i % self.columns1),
+            self.button_rect.top + self.box_size * ((self.object_i - 1) // self.columns1),
+            self.box_size,
+            self.box_size)
+        button_1 = Gui.Button(rect.inflate(-self.button_margin, -self.button_margin),
+                              lambda: func[0](*func[1], **func[2]), image=img)
+        self.buttons.append(button_1)
+        self.object_i += 1
 
     def create_buttons(self, functions, *classes):
         """
@@ -56,11 +72,16 @@ class EditorMenu(Gui.Menu):
         create_block = functions[0]
         set_player = functions[1]
         delete_block = functions[2]
+        start_button = functions[3]
 
-        self.add_button((set_player, (), {}), PLAYER_HEAD)
+        self.add_object((set_player, (), {}), PLAYER_HEAD)
         red = pygame.Surface((64, 64))
         red.fill("red")
-        self.add_button((delete_block, (), {}), red)
+        self.add_object((delete_block, (), {}), red)
+        green = pygame.Surface((64, 64))
+        green.fill("green")
+        self.add_object((start_button, (), {},),  green)
+
 
         for i, class_type in enumerate(classes, start=3):
             self.add_button((create_block, (class_type,), {}), class_type.base_image)
@@ -69,7 +90,8 @@ class EditorMenu(Gui.Menu):
         """
         puts everything on the screen
         """
-        display_surface.blit(self.background, self.rect)
+        display_surface.blit(self.background, self.scroll_rect)
+        display_surface.blit(self.background1, self.button_rect)
         for button in self.buttons:
             display_surface.blit(button.image, button.rect)
 
@@ -77,7 +99,7 @@ class EditorMenu(Gui.Menu):
         """
         clicks all the inputs on the menu
         """
-        r = self.rect.collidepoint(location)
+        r = self.scroll_rect.collidepoint(location)
         for button in self.buttons:
             r = button.click(location, button_type, down) or r
         return r
