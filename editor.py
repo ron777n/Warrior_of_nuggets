@@ -211,6 +211,9 @@ class Editor:
 
     def draw(self):
         self.display_surface.fill("white")
+        x = pygame.transform.scale(pygame.image.load("sprites/Gui/Gal.jpg"), (SCREEN_WIDTH, SCREEN_HEIGHT))
+        self.display_surface.blit(x, (0, 0))
+
         self.draw_tile_lines()
         self.draw_blocks()
         self.draw_player()

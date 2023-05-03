@@ -97,6 +97,7 @@ class EditorMenu(Gui.Menu):
         """
         display_surface.blit(self.background, self.scroll_rect)
         display_surface.blit(self.background1, self.button_rect)
+
         for button in self.buttons:
             display_surface.blit(button.image, button.rect)
 
