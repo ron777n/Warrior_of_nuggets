@@ -2,12 +2,11 @@
 Main, but better
 """
 import pygame
-import json
 
-# from Game import Game
 from editor import Editor
 
 from settings import *
+from game import Game
 
 
 class Main:
@@ -26,7 +25,7 @@ class Main:
         cursor = pygame.Cursor(tuple(settings["Cursor"]["ClickCord"]), cursor_surf)
         pygame.mouse.set_cursor(cursor)
 
-        # self.game = Game()
+        self.level = Game("Levels/Egg.lvl")
         self.editor = Editor()
 
     def run(self):
@@ -35,7 +34,8 @@ class Main:
         """
         while True:
             dt = self.clock.tick(60) / 100
-            self.editor.run(dt)
+            # self.editor.run(dt)
+            self.level.run(dt)
             pygame.display.update()
 
 
