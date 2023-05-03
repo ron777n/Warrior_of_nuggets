@@ -102,6 +102,8 @@ class Editor:
 
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_SPACE:
+                self.save_level()
+                return
                 if not self.testing:
                     self.testing = True
                     self.spawn_blocks()
@@ -211,3 +213,14 @@ class Editor:
         else:
             self.display_surface.blit(background, self.menu.rect)
             self.menu.display(self.display_surface)
+
+    def save_level(self):
+        save_json = dict()
+        save_json["Player"] = list(self.player)
+        save_json["Level"] = {}
+        for location, data in self.canvas_data.items():
+            # print(location, data.json)
+            save_json["Level"][str(location)] = data.json
+        print(save_json)
+        with open("Egg.lvl", "w") as file:
+            json.dump(save_json, file)

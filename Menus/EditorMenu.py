@@ -94,6 +94,11 @@ class EditorTile:
         additions = []
 
     @property
+    def json(self):
+        return {self.main_block[0].__name__: (list(self.main_block[1]),
+                                              {name: values[0] for name, values in self.main_block[2].items()})}
+
+    @property
     def image(self) -> pygame.surface.Surface:
         return self.main_block[0].base_image
 
