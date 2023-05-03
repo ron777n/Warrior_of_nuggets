@@ -8,6 +8,7 @@ from pygame.math import Vector2
 import json
 from pymunk.pygame_util import DrawOptions
 
+import level
 from Menus import EditorMenu
 from physics.objects import Block, SlipperyBlock
 from settings import *
@@ -225,39 +226,9 @@ class Editor:
             self.menu.display(self.display_surface)
 
     def save_level(self):
-        save_json = dict()
-        save_json["Player"] = list(self.player)
-        save_json["Level"] = {}
-        for location, data in self.canvas_data.items():
-            # print(location, data.json)
-            save_json["Level"][str(location)] = data.json
-        with open("Egg.lvl", "w") as file:
-            json.dump(save_json, file)
+        level.save("Levels/Egg.lvl", self.player, self.canvas_data)
 
     def load_level(self):
-        with open("Egg.lvl", "r") as file:
-            loaded = json.load(file)
-
         self.canvas_data.clear()
-
-        self.player = tuple(loaded["Player"])
-        # button_type = (pymunk.Body.DYNAMIC, (pymunk.Body.STATIC, pymunk.Body.DYNAMIC))
-        # self.selected_block = (block, (), {"body_type": button_type})
-
-        for location, data in loaded["Level"].items():
-            block = None
-            if data[0] == "Block":
-                block = Block
-            elif data[0] == "SlipperyBlock":
-                block = SlipperyBlock
-            else:
-                block = Block
-
-            blocks_data = {}
-            for block_data_type, value in data[2].items():
-                if block_data_type == "body_type":
-                    data[2][block_data_type] = (value, (pymunk.Body.STATIC, pymunk.Body.DYNAMIC))
-                else:
-                    print(block_data_type, value)
-
-            self.canvas_data[(int(location[1]), int(location[4]))] = EditorMenu.EditorTile((block, data[1], data[2]))
+        self.player, data = level.load("Levels/Egg.lvl")
+        self.canvas_data.update(data)

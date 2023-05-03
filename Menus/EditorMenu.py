@@ -19,6 +19,7 @@ width1 = 128
 height = SCREEN_HEIGHT - margin
 height1 = 128
 
+
 class EditorMenu(Gui.Menu):
     """
     The menu class for the editor
