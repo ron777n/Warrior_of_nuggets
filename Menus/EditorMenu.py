@@ -34,6 +34,7 @@ class EditorMenu(Gui.Menu):
         self.button_margin = 5
         self.columns = 2
         self.box_size = width / self.columns
+        self.background = pygame.transform.scale(pygame.image.load("sprites/Gui/BlocksMenu.png"), self.rect.size)
 
         self.create_buttons(set_functions, *classes)
 
@@ -68,6 +69,7 @@ class EditorMenu(Gui.Menu):
         """
         puts everything on the screen
         """
+        display_surface.blit(self.background, self.rect)
         for button in self.buttons:
             display_surface.blit(button.image, button.rect)
 
@@ -110,6 +112,7 @@ class TileMenu(Gui.Menu):
         self.buttons = {}
         self.active = False
         self.current = None
+        self.background = pygame.transform.scale(pygame.image.load("sprites/Gui/BlocksMenu.png"), self.rect.size)
 
     def reset(self, tile: EditorTile):
         self.active = True
@@ -141,6 +144,7 @@ class TileMenu(Gui.Menu):
             self.buttons[button_1] = tile.main_block[2][name]
 
     def display(self, display_surface: pygame.surface.Surface):
+        display_surface.blit(self.background, self.rect)
         for button, value in self.buttons.items():
             display_surface.blit(button.image, button.rect)
             img = pygame.surface.Surface(button.rect.size)
