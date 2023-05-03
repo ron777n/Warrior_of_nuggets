@@ -17,7 +17,7 @@ class BaseObject(pymunk.Body):
 class Solid(BaseObject):
     base_image: pygame.surface.Surface
 
-    def __init__(self, space, rect: pygame.rect.Rect, *, mass=1, moment=0, body_type=pymunk.Body.DYNAMIC):
+    def __init__(self, space, rect: pygame.rect.Rect, *, mass=0.1, moment=0, body_type=pymunk.Body.DYNAMIC):
         super().__init__(mass=mass, moment=moment, body_type=body_type)
         self.shape = pymunk.Poly.create_box(self, size=rect.size)
         self.shape.mass = 1

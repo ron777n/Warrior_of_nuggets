@@ -7,6 +7,7 @@ import pymunk
 
 from Menus import EditorMenu
 from physics.objects import Block, SlipperyBlock
+from settings import TILE_SIZE
 
 
 def save(filename, player_location, blocks_data):
@@ -15,16 +16,18 @@ def save(filename, player_location, blocks_data):
     save_json["Level"] = {}
     for location, data in blocks_data.items():
         save_json["Level"][str(location)] = data.json
-    with open("Levels/Egg.lvl", "w") as file:
+    with open(filename, "w") as file:
         json.dump(save_json, file)
 
 
-def load(filename):
+def load(filename, scale=False):
     canvas_data = {}
     with open(filename, "r") as file:
         loaded = json.load(file)
 
     player = tuple(loaded["Player"])
+    if scale:
+        player = player[0] * TILE_SIZE, player[1] * TILE_SIZE
     # button_type = (pymunk.Body.DYNAMIC, (pymunk.Body.STATIC, pymunk.Body.DYNAMIC))
     # self.selected_block = (block, (), {"body_type": button_type})
 
@@ -43,8 +46,11 @@ def load(filename):
                 print(block_data_type, value)
         location: str
         comma = location.find(",")
+        location_tuple = (int(location[1:comma]), int(location[comma + 2:-1]))
+        if scale:
+            location_tuple = location_tuple[0] * TILE_SIZE, location_tuple[1] * TILE_SIZE
 
-        canvas_data[(int(location[1:comma]), int(location[comma + 2:-1]))] = \
+        canvas_data[location_tuple] = \
             EditorMenu.EditorTile((block, data[1], data[2]))
 
     return player, canvas_data
