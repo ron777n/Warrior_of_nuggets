@@ -40,7 +40,8 @@ class Editor:
                 self.set_block,
                 self.set_player,
                 self.delete_block,
-                self.start
+                self.start,
+                self.save_level
             ),
             Block, SlipperyBlock
         )

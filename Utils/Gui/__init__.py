@@ -58,7 +58,7 @@ class Button(BaseGui):
             self.on_click = lambda: on_click[0](*on_click[1:])
         self.rect = rect.copy()
         self.clicked = False
-        self._image = pygame.transform.scale(image, self.rect.size)
+        self._image = pygame.transform.smoothscale(image, self.rect.size)
 
     def click(self, location: tuple[int, int], button_type: int, down: bool):
         """

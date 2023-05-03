@@ -8,6 +8,7 @@ from collections.abc import Iterable
 import pygame.display
 import pymunk
 
+from Utils.image_utils import Text
 from physics.objects import Solid, BaseObject
 from settings import *
 from Utils import Gui, image_utils
@@ -54,14 +55,18 @@ class EditorMenu(Gui.Menu):
         self.buttons.append(button_1)
         self.buttons_i += 1
 
-    def add_object(self, func: (callable, Iterable, dict), img):
+    def add_object(self, func: (callable, Iterable, dict), text):
         rect = pygame.rect.Rect(
             self.button_rect.left + self.box_size * (self.object_i % self.columns1),
             self.button_rect.top + self.box_size * ((self.object_i - 1) // self.columns1),
             self.box_size,
             self.box_size)
+        base_image = pygame.image.load("sprites/Gui/Button.png")
+        set_image = pygame.transform.scale(base_image, rect.size)
+        player_text = Text(text, (255, 0, 0))
+        set_image.blit(player_text, (rect.width/player_text.size[0], player_text.size[1]/2))
         button_1 = Gui.Button(rect.inflate(-self.button_margin, -self.button_margin),
-                              lambda: func[0](*func[1], **func[2]), image=img)
+                              lambda: func[0](*func[1], **func[2]), image=set_image)
         self.buttons.append(button_1)
         self.object_i += 1
 
@@ -73,14 +78,14 @@ class EditorMenu(Gui.Menu):
         set_player = functions[1]
         delete_block = functions[2]
         start_button = functions[3]
+        save_level = functions[4]
+        self.add_object((set_player, (), {}), "player")
 
-        self.add_object((set_player, (), {}), PLAYER_HEAD)
-        red = pygame.Surface((64, 64))
-        red.fill("red")
-        self.add_object((delete_block, (), {}), red)
-        green = pygame.Surface((64, 64))
-        green.fill("green")
-        self.add_object((start_button, (), {},),  green)
+        self.add_object((delete_block, (), {}), "delete")
+
+        self.add_object((start_button, (), {},),  "start")
+
+        self.add_object((save_level, (), {},), "save")
 
 
         for i, class_type in enumerate(classes, start=3):
