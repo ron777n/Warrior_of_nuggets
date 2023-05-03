@@ -202,7 +202,11 @@ class Editor:
         self.draw_player()
 
     def draw_gui(self):
+        background = pygame.Surface((1000, 1000))
+        background.fill("BLACK")
         if self.settings.active:
+            self.display_surface.blit(background, self.settings.rect)
             self.settings.display(self.display_surface)
         else:
+            self.display_surface.blit(background, self.menu.rect)
             self.menu.display(self.display_surface)
