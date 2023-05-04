@@ -9,6 +9,8 @@ from Utils import image_utils
 
 
 class BaseObject(pymunk.Body):
+    rect: pygame.Rect
+
     @property
     def image(self) -> pygame.surface.Surface:
         return pygame.surface.Surface((50, 50))
