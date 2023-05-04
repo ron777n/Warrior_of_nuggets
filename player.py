@@ -13,7 +13,7 @@ class Player(Solid):
     def __init__(self, space, pos, *, camera: Optional[Camera] = None):
         self.image_ = pygame.transform.scale(pygame.image.load("sprites/Player/Player.png"), (100, 200))
         rect: pygame.Rect = pygame.Rect(pos, (100, 180))
-        super().__init__(space, rect, mass=10, body_type=pymunk.Body.DYNAMIC)
+        super().__init__(space, rect, mass=10, body_type="DYNAMIC")
 
         self.jump = False
         self.moving = 0

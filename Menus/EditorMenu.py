@@ -88,7 +88,6 @@ class EditorMenu(Gui.Menu):
 
         self.add_object((save_level, (), {},), "save")
 
-
         for i, class_type in enumerate(classes, start=3):
             self.add_button((create_block, (class_type,), {}), class_type.base_image)
 
@@ -118,9 +117,20 @@ class EditorTile:
     """
 
     def __init__(self, selection: tuple[type(Solid), tuple, dict[any, tuple[any, tuple]]]):
-        self.main_block: tuple[type(Solid), tuple, dict[any, list[any, Iterable]]] = \
-            (selection[0], selection[1], {a: [b[0], itertools.cycle(b[1])] for a, b in selection[2].items()})
-        self.main_block = (*self.main_block[:2], self.main_block[2].copy())
+        block_data = {}
+        for key, (value, possible_values) in selection[2].items():
+            data_swap = None
+            if typing.get_origin(possible_values) == typing.Literal:
+                possible_values = typing.get_args(possible_values)
+            if isinstance(possible_values, Iterable):
+                data_swap = itertools.cycle(possible_values)
+                for val in data_swap:
+                    if val == value:
+                        break
+            if data_swap is not None:
+                block_data[key] = [value, possible_values, data_swap]
+        self.main_block: tuple[type(Solid), tuple, dict[any, list[any, any, any]]] = \
+            (selection[0], selection[1], block_data)
 
         additions = []
 
@@ -128,7 +138,7 @@ class EditorTile:
     def json(self):
         return (self.main_block[0].__name__,
                 list(self.main_block[1]),
-                {name: values[0] for name, values in self.main_block[2].items()})
+                {name: [values[0], values[1]] for name, values in self.main_block[2].items()})
 
     @property
     def image(self) -> pygame.surface.Surface:
@@ -153,20 +163,20 @@ class TileMenu(Gui.Menu):
         button_margin = 5
 
         box_size = width / (columns + 1)
-        for i, (name, (value, possible_values)) in \
+        for i, (name, (value, possible_values, swapper)) in \
                 enumerate(tile.main_block[2].items(), start=1):
-            # print(name, value, possible_values, type(possible_values))
             func: callable = lambda: 0
-            if isinstance(possible_values, Iterable):
+            if isinstance(swapper, Iterable):
                 def func():
-                    a = next(possible_values)
-                    tile.main_block[2][name][:] = [a, possible_values]
+                    a = next(swapper)
+                    tile.main_block[2][name][:] = [a, possible_values, swapper]
 
             rect = pygame.rect.Rect(
                 self.rect.left + box_size * (i % columns),
                 self.rect.top + box_size * ((i - 1) // columns),
                 box_size,
                 box_size)
+
             button_1 = Gui.Button(
                 rect.inflate(-button_margin, -button_margin),
                 func
@@ -178,7 +188,6 @@ class TileMenu(Gui.Menu):
         for button, value in self.buttons.items():
             display_surface.blit(button.image, button.rect)
             img = pygame.surface.Surface(button.rect.size)
-            # print((button, value))
             img.fill("red")
             rect = img.get_rect().copy()
             text = image_utils.Text(str(value[0])).wrap(rect.size)

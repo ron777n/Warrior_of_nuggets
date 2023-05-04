@@ -1,6 +1,8 @@
 """
 pass
 """
+from enum import Enum
+from typing import Final, Literal
 
 import pygame
 import pymunk
@@ -19,8 +21,10 @@ class BaseObject(pymunk.Body):
 class Solid(BaseObject):
     base_image: pygame.surface.Surface
 
-    def __init__(self, space, rect: pygame.rect.Rect, *,
-                 mass=100, moment=0, body_type=pymunk.Body.DYNAMIC, friction=0.95):
+    def __init__(self, space, rect: pygame.rect.Rect, *, mass: int = 100, moment: int = 0,
+                 body_type: Literal["DYNAMIC", "KINEMATIC", "STATIC"] = "DYNAMIC", friction: float = 0.95):
+        # assert body_type in Literal["DYNAMIC", "KINEMATIC", "STATIC"], "Invalid body type"
+        body_type = getattr(pymunk.Body, body_type)
         super().__init__(mass=mass, moment=moment, body_type=body_type)
         self.shape = pymunk.Poly.create_box(self, size=rect.size)
         self.shape.mass = mass

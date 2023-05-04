@@ -62,18 +62,15 @@ class Editor:
     def start(self):
         self.save_level()
         self.transition()
-        # self.selected_block = "start"
-        # if not self.testing:
-        #     self.testing = True
-        #     self.spawn_blocks()
-        # else:
-        #     self.testing = False
-        #     self.clear()
-        #     # self.space.remove()
 
     def set_block(self, block):
-        button_type = (pymunk.Body.DYNAMIC, (pymunk.Body.STATIC, pymunk.Body.DYNAMIC))
-        self.selected_block = (block, (),  {"body_type": button_type})
+        annotations = block.__init__.__annotations__
+        block_data = {}
+        for key, value in block.__init__.__kwdefaults__.items():
+            if key in annotations:
+                block_data[key] = (value, annotations[key])
+
+        self.selected_block = (block, (),  block_data)
 
     def event_loop(self, delta_time):
         """
@@ -170,6 +167,7 @@ class Editor:
             tile = self.canvas_data[tile_cords]
             if self.settings and self.settings.current == tile:
                 self.settings.active = False
+                self.settings.current = None
             else:
                 self.settings.reset(tile)
 
@@ -200,7 +198,7 @@ class Editor:
             rect = pygame.rect.Rect(self.get_rel_cords(coordinates, False),
                                     (TILE_SIZE, TILE_SIZE))
             block = tile.main_block[0](self.space, rect, *tile.main_block[1],
-                                       **{name: val for name, (val, _) in tile.main_block[2].items()})
+                                       **{name: val for name, (val, options, setter) in tile.main_block[2].items()})
             self.active_blocks.append(block)
 
     def clear(self):

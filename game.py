@@ -64,7 +64,7 @@ class Game:
         self.camera.append(
             data.main_block[0](
                 self.space, rect,
-                *data.main_block[1], **{name: val for name, (val, _) in data.main_block[2].items()}
+                *data.main_block[1], **{name: val for name, (val, _, _) in data.main_block[2].items()}
                 )
         )
 
