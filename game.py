@@ -49,9 +49,9 @@ class Game:
 
     def run(self, dt):
         self.event_loop()
-        self.camera.display()
-        self.camera.update()
         self.player.update()
+        self.camera.update()
+        self.camera.display()
         self.space.step(dt)
 
     def add_objects(self, data):
@@ -72,4 +72,8 @@ class Game:
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_RETURN:
                 self.transition()
+            elif event.key == pygame.K_EQUALS:
+                self.camera.zoom(2)
+            elif event.key == pygame.K_MINUS:
+                self.camera.zoom(0.5)
         self.player.handle_event(event)
