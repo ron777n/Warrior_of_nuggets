@@ -3,6 +3,7 @@ yes
 """
 import pygame
 import pymunk
+from pymunk import pygame_util
 
 import level
 from Menus.EditorMenu import EditorTile
@@ -22,8 +23,9 @@ class Game:
         self.space = pymunk.Space()
         self.space.gravity = (0, 10)
 
-        self.player = Player(self.space, player_spawn)
+        self.player: Player = Player(self.space, player_spawn)
         self.camera.append(self.player)
+        self.debug_options = pymunk.pygame_util.DrawOptions(self.display_surface)
 
         self.add_objects(data)
 
@@ -36,6 +38,8 @@ class Game:
     def run(self, dt):
         self.event_loop()
         self.draw()
+        self.player.update()
+        # self.space.debug_draw(self.debug_options)
         self.space.step(dt)
 
     def add_objects(self, data):
