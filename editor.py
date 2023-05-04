@@ -11,7 +11,6 @@ from pymunk.pygame_util import DrawOptions
 import level
 from Menus import EditorMenu
 from physics.objects import Block, SlipperyBlock
-import os
 
 from settings import *
 
@@ -93,8 +92,8 @@ class Editor:
                 self.origin += Vector2(event.rel)
             elif event.buttons[0]:
                 mouse_data = event.pos, 1, True
-                if (self.settings.active and not self.settings.rect.collidepoint(event.pos)) or \
-                        not self.menu.scroll_rect.collidepoint(event.pos):
+                if (self.settings.active and not self.settings.collide_point(event.pos)) or \
+                        not self.menu.collide_point(event.pos):
                     self.click(*mouse_data)
 
         elif event.type == pygame.MOUSEWHEEL:

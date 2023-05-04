@@ -19,7 +19,7 @@ class BaseGui(pygame.sprite.Sprite, abc.ABC):
         """
         pass
 
-    def scroll(self, location, amount):
+    def scroll(self, location, amount) -> bool:
         """
         If user scrolls on the screen
         """
@@ -42,6 +42,12 @@ class BaseGui(pygame.sprite.Sprite, abc.ABC):
     @rect.setter
     def rect(self, rect: pygame.rect.Rect):
         self._rect = rect
+
+    def collide_point(self, point) -> bool:
+        """
+        checks if the point hits the gui
+        """
+        return self._rect.collidepoint(point)
 
 
 class Button(BaseGui):
@@ -86,7 +92,19 @@ class Button(BaseGui):
 
 class Menu(abc.ABC):
     def display(self, display_surface: pygame.surface.Surface):
+        """
+        displays the menu on the screen
+        """
         ...
 
     def click(self, location: tuple[int, int], button_type: int, down: bool) -> bool:
+        """
+        clicks the menu
+        """
+        ...
+
+    def collide_point(self, point):
+        """
+        if it hit the menu
+        """
         ...

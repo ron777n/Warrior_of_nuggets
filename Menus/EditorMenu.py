@@ -105,10 +105,13 @@ class EditorMenu(Gui.Menu):
         """
         clicks all the inputs on the menu
         """
-        r = self.scroll_rect.collidepoint(location)
+        r = self.collide_point(location)
         for button in self.buttons:
             r = button.click(location, button_type, down) or r
         return r
+
+    def collide_point(self, point):
+        return self.scroll_rect.collidepoint(point) or self.button_rect.collidepoint(point)
 
 
 class EditorTile:
