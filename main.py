@@ -15,6 +15,7 @@ class Main:
     """
 
     def __init__(self, ):
+        self.editor_active = True
         pygame.init()
         cam_shape = SCREEN_WIDTH, SCREEN_HEIGHT
         pygame.display.set_mode(cam_shape)
@@ -25,8 +26,8 @@ class Main:
         cursor = pygame.Cursor(tuple(settings["Cursor"]["ClickCord"]), cursor_surf)
         pygame.mouse.set_cursor(cursor)
 
-        self.level = Game("Levels/Egg.lvl")
-        self.editor = Editor()
+        self.game = Game(self.transition, "Levels/Egg.lvl")
+        self.editor = Editor(self.transition, "Levels/Egg.lvl")
 
     def run(self):
         """
@@ -34,9 +35,16 @@ class Main:
         """
         while True:
             dt = self.clock.tick(60) / 100
-            # self.editor.run(dt)
-            self.level.run(dt)
+            if self.editor_active:
+                self.editor.run(dt)
+            else:
+                self.game.run(dt)
             pygame.display.update()
+
+    def transition(self):
+        if self.editor_active:
+            self.game.reset()
+        self.editor_active = not self.editor_active
 
 
 if __name__ == "__main__":

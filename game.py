@@ -16,7 +16,10 @@ class Game:
     """
     pass
     """
-    def __init__(self, level_name):
+    def __init__(self, transition, level_name):
+        self.transition = transition
+        self.level_name = level_name
+
         self.display_surface = pygame.display.get_surface()
         player_spawn, data = level.load(level_name, True)
 
@@ -30,11 +33,19 @@ class Game:
 
         self.add_objects(data)
 
+    def reset(self):
+        self.camera.clear(self.space)
+        player_spawn, data = level.load(self.level_name, True)
+        self.player: Player = Player(self.space, player_spawn, camera=self.camera)
+        self.camera.append(self.player)
+
+        self.add_objects(data)
+
     def event_loop(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 raise KeyboardInterrupt
-            self.player.handle_event(event)
+            self.handle_event(event)
 
     def run(self, dt):
         self.event_loop()
@@ -56,3 +67,9 @@ class Game:
                 *data.main_block[1], **{name: val for name, (val, _) in data.main_block[2].items()}
                 )
         )
+
+    def handle_event(self, event):
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_RETURN:
+                self.transition()
+        self.player.handle_event(event)

@@ -11,6 +11,8 @@ from pymunk.pygame_util import DrawOptions
 import level
 from Menus import EditorMenu
 from physics.objects import Block, SlipperyBlock
+import os
+
 from settings import *
 
 with open("settings.json") as f:
@@ -22,7 +24,10 @@ class Editor:
     The class that holds the loop
     """
 
-    def __init__(self, ):
+    def __init__(self, transition, level_name):
+        self.transition = transition
+        self.level_name = level_name
+
         self.active_blocks = []
         self.selected_block = None
         self.display_surface = pygame.display.get_surface()
@@ -46,6 +51,7 @@ class Editor:
             ),
             Block, SlipperyBlock
         )
+        self.load_level()
 
     def delete_block(self):
         self.selected_block = "delete"
@@ -54,14 +60,16 @@ class Editor:
         self.selected_block = "player"
 
     def start(self):
-        self.selected_block = "start"
-        if not self.testing:
-            self.testing = True
-            self.spawn_blocks()
-        else:
-            self.testing = False
-            self.clear()
-            # self.space.remove()
+        self.save_level()
+        self.transition()
+        # self.selected_block = "start"
+        # if not self.testing:
+        #     self.testing = True
+        #     self.spawn_blocks()
+        # else:
+        #     self.testing = False
+        #     self.clear()
+        #     # self.space.remove()
 
     def set_block(self, block):
         button_type = (pymunk.Body.DYNAMIC, (pymunk.Body.STATIC, pymunk.Body.DYNAMIC))
@@ -119,10 +127,8 @@ class Editor:
                 else:
                     self.testing = False
                     self.clear()
-            if event.key == pygame.K_LALT:
-                self.load_level()
-            if event.key == pygame.K_LCTRL:
-                self.save_level()
+            elif event.key == pygame.K_RETURN:
+                self.start()
 
     def draw_tile_lines(self):
         """

@@ -25,7 +25,7 @@ class Solid(BaseObject):
         self.shape = pymunk.Poly.create_box(self, size=rect.size)
         self.shape.mass = mass
         self.shape.friction = friction
-        self.position = rect.center
+        self.position = pymunk.vec2d.Vec2d(*rect.center)
         self._rect = rect
         self.original_size = rect.size
         space.add(self, self.shape)

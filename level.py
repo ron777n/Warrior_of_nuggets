@@ -2,6 +2,7 @@
 The level
 """
 import json
+import os
 
 import pymunk
 
@@ -21,6 +22,8 @@ def save(filename, player_location, blocks_data):
 
 
 def load(filename, scale=False):
+    if not os.path.isfile(filename):
+        return (0, 0), {}
     canvas_data = {}
     with open(filename, "r") as file:
         loaded = json.load(file)

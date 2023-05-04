@@ -1,6 +1,7 @@
 from typing import Optional
 
 import pygame
+import pymunk
 
 from physics.objects import BaseObject
 from settings import SCREEN_HEIGHT, SCREEN_WIDTH
@@ -29,6 +30,12 @@ class Camera:
     def update(self):
         if self.tracker is not None:
             self.tracker.snap()
+
+    def clear(self, space: Optional[pymunk.Space] = None):
+        if space is not None:
+            for item in self.items:
+                space.remove(item, item.shape)
+        self.items.clear()
 
     def append(self, *items):
         for item in items:
