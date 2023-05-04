@@ -28,17 +28,6 @@ class Player(Solid):
         body.angle = 0
         body.angular_velocity = 0.0
 
-    # @staticmethod
-    # def velocity_function(body: 'Player', gravity, damping, delta_time):
-    #     pymunk.Body.update_velocity(body, gravity, damping, delta_time)
-    #     vel = body.velocity
-    #     if body.moving:
-    #         vel = body.moving * 30, vel[1]
-    #     if body.jump:
-    #         vel = vel[0], -30
-    #         body.jump = False
-    #     body.velocity = vel
-
     def handle_event(self, event: pygame.event.Event):
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_d:

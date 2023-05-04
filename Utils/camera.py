@@ -3,20 +3,21 @@ from typing import Optional
 import pygame
 
 from physics.objects import BaseObject
+from settings import SCREEN_HEIGHT, SCREEN_WIDTH
 from Utils.trackers import BoundTracker
 
 
 class Camera:
 
     def __init__(self, background: pygame.Surface, *objects):
-        self.background = background
+        self.background = pygame.transform.scale(background, (SCREEN_WIDTH, SCREEN_HEIGHT))
         self.display_surface = pygame.display.get_surface()
         self.target = None
         self.items: list[BaseObject] = []
         self.tracker: Optional[BoundTracker] = None
 
     def display(self):
-        self.display_surface.fill("black")
+        self.display_surface.blit(self.background, (0, 0))
         for item in self.items:
             if self.tracker is not None:
                 a, b = item.rect.topleft, self.tracker.rect.topleft
