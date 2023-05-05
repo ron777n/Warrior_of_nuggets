@@ -65,13 +65,13 @@ class Editor:
     def set_block(self, block, block_data=None):
         if settings is None:
             block_data = {}
+        block_data = block_data.copy()
         annotations = block.__init__.__annotations__
         for key, value in block.__init__.__kwdefaults__.items():
             if key in annotations:
                 if key in block_data:
                     value = block_data[key]
                 block_data[key] = (value, annotations[key])
-
         self.selected_block = (block, (),  block_data)
 
     def event_loop(self, delta_time):

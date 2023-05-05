@@ -28,7 +28,7 @@ class EditorMenu(Gui.Menu):
     def __init__(self, set_functions: tuple[callable, ...], *classes: type[BaseObject]):
         self.selected_block = None
         self.buttons: list[Gui.BaseGui] = []
-        self.buttons_i = 1
+        self.buttons_i = 0
         self.object_i = 1
 
         top_left = (SCREEN_WIDTH - width - margin, SCREEN_HEIGHT - height - margin)
@@ -49,12 +49,12 @@ class EditorMenu(Gui.Menu):
         self.start_button = set_functions[3]
         self.save_level = set_functions[4]
 
-        self.create_buttons(set_functions, *classes)
+        self.create_buttons(classes)
 
     def add_button(self, class_type, values, img):
         rect = pygame.rect.Rect(
             self.scroll_rect.left + self.box_size * (self.buttons_i % self.columns),
-            self.scroll_rect.top + self.box_size * ((self.buttons_i - 1) // self.columns),
+            self.scroll_rect.top + self.box_size * (self.buttons_i // self.columns),
             self.box_size,
             self.box_size)
         button_1 = Gui.Button(rect.inflate(-self.button_margin, -self.button_margin),
@@ -77,7 +77,7 @@ class EditorMenu(Gui.Menu):
         self.buttons.append(button_1)
         self.object_i += 1
 
-    def create_buttons(self, functions, *classes):
+    def create_buttons(self, classes):
         """
         just creates all the buttons
         """
@@ -89,7 +89,7 @@ class EditorMenu(Gui.Menu):
 
         self.add_object((self.save_level, (), {},), "save")
 
-        for i, class_type in enumerate(classes, start=3):
+        for i, class_type in enumerate(classes, start=1):
             self.add_button(class_type, {}, class_type.base_image)
 
     def display(self, display_surface):

@@ -72,11 +72,12 @@ class Button(BaseGui):
         """
         collided = self.rect.collidepoint(location)
         if down:
-            if collided:
+            if collided and button_type == pygame.BUTTON_LEFT:
                 self.clicked = True
-                self.on_click()
-        else:
+        elif button_type == pygame.BUTTON_LEFT:
             self.clicked = False
+            if collided:
+                self.on_click()
         return collided
 
     @property
