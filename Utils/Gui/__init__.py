@@ -7,7 +7,7 @@ from typing import Callable
 import pygame
 
 
-class BaseGui(pygame.sprite.Sprite, abc.ABC):
+class BaseGui(abc.ABC):
     """
     The base gui class
     """
@@ -56,12 +56,12 @@ class Button(BaseGui):
     """
 
     def __init__(self, rect: pygame.Rect, on_click, *groups, image: pygame.Surface = pygame.Surface((50, 50))):
-        super().__init__(*groups)
+        # super().__init__()
         self.on_click: callable
         if callable(on_click):
             self.on_click = on_click
         else:
-            self.on_click = lambda: on_click[0](*on_click[1:])
+            self.on_click = lambda: on_click[0](*on_click[1], **on_click[2])
         self.rect = rect.copy()
         self.clicked = False
         self._image = pygame.transform.smoothscale(image, self.rect.size)

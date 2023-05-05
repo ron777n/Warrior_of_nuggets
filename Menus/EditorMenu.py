@@ -43,16 +43,22 @@ class EditorMenu(Gui.Menu):
         self.background = pygame.transform.scale(pygame.image.load("sprites/Gui/BlocksMenu.png"), self.scroll_rect.size)
         self.background1 = pygame.transform.scale(pygame.image.load("sprites/Gui/BlocksMenu.png"), self.button_rect.size)
 
+        self.create_block = set_functions[0]
+        self.set_player = set_functions[1]
+        self.delete_block = set_functions[2]
+        self.start_button = set_functions[3]
+        self.save_level = set_functions[4]
+
         self.create_buttons(set_functions, *classes)
 
-    def add_button(self, func: (callable, Iterable, dict), img):
+    def add_button(self, class_type, values, img):
         rect = pygame.rect.Rect(
             self.scroll_rect.left + self.box_size * (self.buttons_i % self.columns),
             self.scroll_rect.top + self.box_size * ((self.buttons_i - 1) // self.columns),
             self.box_size,
             self.box_size)
         button_1 = Gui.Button(rect.inflate(-self.button_margin, -self.button_margin),
-                              lambda: func[0](*func[1], **func[2]), image=img)
+                              lambda: self.create_block(class_type, values), image=img)
         self.buttons.append(button_1)
         self.buttons_i += 1
 
@@ -75,21 +81,16 @@ class EditorMenu(Gui.Menu):
         """
         just creates all the buttons
         """
-        create_block = functions[0]
-        set_player = functions[1]
-        delete_block = functions[2]
-        start_button = functions[3]
-        save_level = functions[4]
-        self.add_object((set_player, (), {}), "player")
+        self.add_object((self.set_player, (), {}), "player")
 
-        self.add_object((delete_block, (), {}), "delete")
+        self.add_object((self.delete_block, (), {}), "delete")
 
-        self.add_object((start_button, (), {},),  "start")
+        self.add_object((self.start_button, (), {},),  "start")
 
-        self.add_object((save_level, (), {},), "save")
+        self.add_object((self.save_level, (), {},), "save")
 
         for i, class_type in enumerate(classes, start=3):
-            self.add_button((create_block, (class_type,), {}), class_type.base_image)
+            self.add_button(class_type, {}, class_type.base_image)
 
     def display(self, display_surface):
         """
@@ -149,7 +150,7 @@ class EditorTile:
 
 
 class TileMenu(Gui.Menu):
-    def __init__(self):
+    def __init__(self, save_block):
         top_left = (SCREEN_WIDTH - width - margin, SCREEN_HEIGHT - height - margin)
         self.rect = pygame.Rect(top_left, (width, height))
         self.buttons = {}
@@ -157,39 +158,56 @@ class TileMenu(Gui.Menu):
         self.current = None
         self.background = pygame.transform.scale(pygame.image.load("sprites/Gui/BlocksMenu.png"), self.rect.size)
 
+        self.columns = 1
+        # button areas
+        self.button_margin = 5
+        self.button_count = 1
+        self.box_size = width / (self.columns + 1)
+        self.save_block = save_block
+        self.data = None
+
+    def add_setting(self, obj: str, connection, func, params, kwargs):
+        rect = pygame.rect.Rect(self.rect.left + self.box_size * (self.button_count % self.columns),
+                                self.rect.top + self.box_size * ((self.button_count - 1) // self.columns),
+                                self.box_size, self.box_size)
+
+        if obj == "Button":
+            button_1 = Gui.Button(rect.inflate(-self.button_margin, -self.button_margin), (func, params, kwargs))
+            self.buttons[button_1] = connection
+        self.button_count += 1
+
+    def save_current(self):
+        data = {}
+        for key, item in self.data[1].items():
+            data[key] = item[0]
+
+        self.save_block(self.data[0], data, self.data[0].base_image)
+
     def reset(self, tile: EditorTile):
         self.active = True
         self.current = tile
         self.buttons.clear()
-        columns = 1
-        # button areas
-        button_margin = 5
+        self.button_count = 1
+        self.data = (tile.main_block[0], tile.main_block[2])
 
-        box_size = width / (columns + 1)
-        for i, (name, (value, possible_values, swapper)) in \
-                enumerate(tile.main_block[2].items(), start=1):
+        data = {}
+        for key, item in tile.main_block[2].items():
+            data[key] = item[0]
+        self.add_setting("Button", None, self.save_current, (), {})
+        for name, (value, possible_values, swapper) in tile.main_block[2].items():
             func: callable = lambda: 0
             if isinstance(swapper, Iterable):
                 def func():
                     a = next(swapper)
                     tile.main_block[2][name][:] = [a, possible_values, swapper]
-
-            rect = pygame.rect.Rect(
-                self.rect.left + box_size * (i % columns),
-                self.rect.top + box_size * ((i - 1) // columns),
-                box_size,
-                box_size)
-
-            button_1 = Gui.Button(
-                rect.inflate(-button_margin, -button_margin),
-                func
-            )
-            self.buttons[button_1] = tile.main_block[2][name]
+            self.add_setting("Button", tile.main_block[2][name], func, (), {})
 
     def display(self, display_surface: pygame.surface.Surface):
         display_surface.blit(self.background, self.rect)
         for button, value in self.buttons.items():
             display_surface.blit(button.image, button.rect)
+            if value is None:
+                continue
             img = pygame.surface.Surface(button.rect.size)
             img.fill("red")
             rect = img.get_rect().copy()

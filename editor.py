@@ -36,7 +36,6 @@ class Editor:
         self.canvas_data: dict[tuple[int, int], EditorMenu.EditorTile] = {}
         self.space = pymunk.Space()
         self.space.gravity = (0, 10)
-        self.settings = EditorMenu.TileMenu()
         self.player = (0, 0)
 
         self.testing = False
@@ -50,6 +49,7 @@ class Editor:
             ),
             Block, SlipperyBlock
         )
+        self.settings = EditorMenu.TileMenu(self.menu.add_button)
         self.load_level()
 
     def delete_block(self):
@@ -62,11 +62,14 @@ class Editor:
         self.save_level()
         self.transition()
 
-    def set_block(self, block):
+    def set_block(self, block, block_data=None):
+        if settings is None:
+            block_data = {}
         annotations = block.__init__.__annotations__
-        block_data = {}
         for key, value in block.__init__.__kwdefaults__.items():
             if key in annotations:
+                if key in block_data:
+                    value = block_data[key]
                 block_data[key] = (value, annotations[key])
 
         self.selected_block = (block, (),  block_data)
@@ -206,7 +209,7 @@ class Editor:
         self.active_blocks.clear()
 
     def get_rel_cords(self, cords, origin=True) -> (int, int):
-        return cords[0] * TILE_SIZE + (self.origin[0] if origin else 0),\
+        return cords[0] * TILE_SIZE + (self.origin[0] if origin else 0), \
                cords[1] * TILE_SIZE + (self.origin[1] if origin else 0)
 
     def draw_player(self):
