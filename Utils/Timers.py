@@ -3,14 +3,14 @@ import pygame.time
 
 class Timer:
 
-    def __init__(self, timeout):
+    def __init__(self, timeout, specifics=()):
         self.timeout = timeout
-        self.specifics = {None: pygame.time.get_ticks()}
+        self.specifics = {specific: pygame.time.get_ticks() for specific in specifics}
 
-    def has_expired(self, specific=None):
-        return (pygame.time.get_ticks() - self.specifics[specific]) \
+    def has_expired(self, specific=None) -> bool:
+        return (pygame.time.get_ticks() - self.specifics.get(specific, self.timeout)) \
             > self.timeout
 
-    def rest(self, specific=None):
+    def reset(self, specific=None):
         self.specifics[specific] = pygame.time.get_ticks()
 
