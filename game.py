@@ -23,7 +23,6 @@ class Game:
         self.level_name = level_name
 
         self.display_surface = pygame.display.get_surface()
-        data = level.load(level_name, True)
 
         self.space = pymunk.Space()
         self.space.gravity = (0, 10)
@@ -33,13 +32,9 @@ class Game:
         self.player: Optional[Player] = None
         self.debug_options = pymunk.pygame_util.DrawOptions(self.display_surface)
 
-        self.add_objects(data)
-
     def reset(self):
-        if self.player is None:
-            return
         self.camera.clear(self.space)
-        data = level.load(self.level_name, True)
+        data = level.load(self.level_name, False)
         self.add_objects(data)
 
     def event_loop(self):
@@ -57,22 +52,23 @@ class Game:
 
     def add_objects(self, data):
         tile: EditorTile
+        player = False
         for location, tile in data.items():
-            self.add_object(location, tile)
-
-    def add_object(self, location, data: Union[EditorTile, str]):
-        rect = pygame.Rect((location[0], location[1]), (TILE_SIZE, TILE_SIZE))
-        if isinstance(data, str):
-            if data == "player":
-                self.player: Player = Player(self.space, location, camera=self.camera)
-                self.camera.append(self.player)
-            return
-        self.camera.append(
-            data.main_block[0](
-                self.space, rect,
-                *data.main_block[1], **{name: val for name, (val, _, _) in data.main_block[2].items()}
+            rect = pygame.Rect((location[0], location[1]), (TILE_SIZE, TILE_SIZE))
+            if isinstance(tile, str):
+                if tile == "player":
+                    self.player: Player = Player(self.space, location, camera=self.camera)
+                    player = True
+                    self.camera.append(self.player)
+                continue
+            self.camera.append(
+                tile.main_block[0](
+                    self.space, rect,
+                    *tile.main_block[1], **{name: val for name, (val, _, _) in tile.main_block[2].items()}
                 )
-        )
+            )
+        if not player:
+            raise ValueError("Player location not found in level")
 
     def handle_event(self, event):
         if event.type == pygame.KEYDOWN:

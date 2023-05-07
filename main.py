@@ -48,8 +48,8 @@ class Main:
 
 
 if __name__ == "__main__":
-    main = Main()
     try:
+        main = Main()
         main.run()
     except KeyboardInterrupt:
         print("Good bye")

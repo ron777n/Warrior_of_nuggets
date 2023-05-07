@@ -46,13 +46,13 @@ class Editor:
         self.display_surface = pygame.display.get_surface()
 
         lines = create_lines()
-        self.player = (0, 0)
+        self.player: tuple[int, int] = (0, 0)
 
         self.camera_position = pygame.Rect(0, 0, TILE_SIZE, TILE_SIZE)
 
         self.camera = Camera(("repeat", lines), (SCREEN_WIDTH, SCREEN_HEIGHT), self.camera_position)
 
-        self.canvas_data: dict[tuple[int, int], Union[EditorMenu.EditorTile, str]] = {self.player: "player"}
+        self.canvas_data: dict[tuple[int, int], Union[EditorMenu.EditorTile, str]] = {}
 
         self.menu = EditorMenu.EditorMenu(
             (self.set_block, self.set_player, self.delete_block, self.start, self.save_level), Block, SlipperyBlock)
@@ -170,6 +170,7 @@ class Editor:
                     dat.image = pygame.transform.scale(PLAYER_HEAD, (TILE_SIZE, TILE_SIZE))
                     dat.rect = pygame.Rect((coordinate[0] * TILE_SIZE, coordinate[1] * TILE_SIZE),
                                            (TILE_SIZE, TILE_SIZE))
+                    self.player = coordinate
                 else:
                     continue
             else:
@@ -187,10 +188,20 @@ class Editor:
             self.menu.display(self.display_surface)
 
     def save_level(self):
-        level.save("Levels/Egg.lvl", self.canvas_data)
+        buttons = self.menu.get_buttons()
+        level.save("Levels/Egg.lvl", self.canvas_data, buttons)
 
     def load_level(self):
         self.canvas_data.clear()
-        data = level.load("Levels/Egg.lvl")
-        self.canvas_data.update(data)
+        data = level.load("Levels/Egg.lvl", True)
+        self.canvas_data.update(data["Level"])
         self.update_camera()
+        for block, button_data in data["Editor"]:
+            if block == "Block":
+                class_type = Block
+            elif block == "SlipperyBlock":
+                class_type = SlipperyBlock
+            else:
+                continue
+            button_data = {key: val[0] for key, val in button_data.items()}
+            self.menu.add_button(class_type, button_data, class_type.base_image)

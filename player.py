@@ -14,6 +14,8 @@ class Player(Solid):
         self.image_ = pygame.transform.scale(pygame.image.load("sprites/Player/Player.png"), (100, 200))
         rect: pygame.Rect = pygame.Rect(pos, (100, 180))
         super().__init__(space, rect, mass=10, body_type="DYNAMIC")
+        self.position = pymunk.vec2d.Vec2d(self.rect.centerx, self.rect.top)
+        print(pos, self.position)
 
         self.jump = False
         self.moving = 0

@@ -8,8 +8,9 @@ from collections.abc import Iterable
 import pygame.display
 import pymunk
 
+import level
 from Utils.image_utils import Text
-from physics.objects import Solid, BaseObject
+from physics.objects import Block, SlipperyBlock, Solid, BaseObject
 from settings import *
 from Utils import Gui, image_utils
 
@@ -64,7 +65,13 @@ class EditorMenu(Gui.Menu):
             if key in annotations:
                 if key in values:
                     value = values[key]
-                values[key] = (value, annotations[key])
+                annotation = annotations[key]
+                if typing.get_origin(annotation) == typing.Literal:
+                    annotation = typing.get_args(annotation)
+                else:
+                    annotation = annotation.__name__
+                values[key] = (value, annotation)
+
         button_1 = Gui.Button(rect.inflate(-self.button_margin, -self.button_margin),
                               lambda: self.create_block(class_type, values), image=img)
         for button, (block_type, data) in self.buttons.items():
@@ -79,6 +86,7 @@ class EditorMenu(Gui.Menu):
             self.button_rect.top + self.box_size * ((self.object_i - 1) // self.columns1),
             self.box_size,
             self.box_size)
+
         base_image = pygame.image.load("sprites/Gui/Button.png")
         set_image = pygame.transform.scale(base_image, rect.size)
         player_text = Text(text, (255, 0, 0))
@@ -129,6 +137,12 @@ class EditorMenu(Gui.Menu):
     def collide_point(self, point):
         return self.scroll_rect.collidepoint(point) or self.button_rect.collidepoint(point)
 
+    def get_buttons(self) -> list:
+        to_ret = []
+        for block, data in self.buttons.values():
+            to_ret.append((block.__name__, data))
+        return to_ret
+
 
 class EditorTile:
     """
@@ -139,9 +153,9 @@ class EditorTile:
         block_data = {}
         for key, (value, possible_values) in selection[2].items():
             data_swap = None
-            if typing.get_origin(possible_values) == typing.Literal:
-                possible_values = typing.get_args(possible_values)
-            if isinstance(possible_values, Iterable):
+            if isinstance(possible_values, str):
+                continue
+            elif isinstance(possible_values, Iterable):
                 data_swap = itertools.cycle(possible_values)
                 for val in data_swap:
                     if val == value:
