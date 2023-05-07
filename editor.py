@@ -1,6 +1,7 @@
 """
 This is for the level creator.
 """
+from typing import Union
 
 import pygame
 import pymunk
@@ -10,12 +11,26 @@ from pymunk.pygame_util import DrawOptions
 
 import level
 from Menus import EditorMenu
-from physics.objects import Block, SlipperyBlock
+from physics.objects import BaseObject, Block, SlipperyBlock
 
 from settings import *
+from Utils.camera import Camera
+from Utils.trackers import Tracker
 
 with open("settings.json") as f:
     settings = json.load(f)
+
+
+def create_lines() -> pygame.Surface:
+    cols, rows = settings["Screen"]["Size"]
+
+    rows //= settings["Editor"]["TileSize"]
+    cols //= settings["Editor"]["TileSize"]
+    img = pygame.Surface((TILE_SIZE, TILE_SIZE))
+    img.fill("white")
+    pygame.draw.rect(img, "black", pygame.Rect(0, 0, TILE_SIZE, TILE_SIZE), 1)
+
+    return img
 
 
 class Editor:
@@ -27,28 +42,20 @@ class Editor:
         self.transition = transition
         self.level_name = level_name
 
-        self.active_blocks = []
         self.selected_block = None
         self.display_surface = pygame.display.get_surface()
 
-        self.draw_options = DrawOptions(self.display_surface)
-        self.origin = Vector2()
-        self.canvas_data: dict[tuple[int, int], EditorMenu.EditorTile] = {}
-        self.space = pymunk.Space()
-        self.space.gravity = (0, 10)
+        lines = create_lines()
         self.player = (0, 0)
 
-        self.testing = False
+        self.camera_position = pygame.Rect(0, 0, TILE_SIZE, TILE_SIZE)
+
+        self.camera = Camera(("repeat", lines), (SCREEN_WIDTH, SCREEN_HEIGHT), self.camera_position)
+
+        self.canvas_data: dict[tuple[int, int], Union[EditorMenu.EditorTile, str]] = {self.player: "player"}
+
         self.menu = EditorMenu.EditorMenu(
-            (
-                self.set_block,
-                self.set_player,
-                self.delete_block,
-                self.start,
-                self.save_level
-            ),
-            Block, SlipperyBlock
-        )
+            (self.set_block, self.set_player, self.delete_block, self.start, self.save_level), Block, SlipperyBlock)
         self.settings = EditorMenu.TileMenu(self.menu.add_button)
         self.load_level()
 
@@ -72,7 +79,7 @@ class Editor:
                 if key in block_data:
                     value = block_data[key]
                 block_data[key] = (value, annotations[key])
-        self.selected_block = (block, (),  block_data)
+        self.selected_block = (block, (), block_data)
 
     def event_loop(self, delta_time):
         """
@@ -90,23 +97,23 @@ class Editor:
         :param event:
         """
         if event.type == pygame.MOUSEMOTION:
-            if event.buttons[1] or \
-                    (event.buttons[0] and pygame.key.get_mods() & pygame.KMOD_CTRL):
-                self.origin += Vector2(event.rel)
+            if event.buttons[1] or (event.buttons[0] and pygame.key.get_mods() & pygame.KMOD_CTRL):
+                self.camera_position.centerx -= event.rel[0]
+                self.camera_position.centery -= event.rel[1]
             elif event.buttons[0]:
                 mouse_data = event.pos, 1, True
-                if (self.settings.active and not self.settings.collide_point(event.pos)) or \
-                        not self.menu.collide_point(event.pos):
+                if (self.settings.active and not self.settings.collide_point(event.pos)) or not self.menu.collide_point(
+                        event.pos):
                     self.click(*mouse_data)
 
         elif event.type == pygame.MOUSEWHEEL:
             if event.x:
-                self.origin.x -= event.x * TILE_SIZE / 2
+                self.camera_position.centerx -= event.x * TILE_SIZE / 2
             if event.y:
                 if pygame.key.get_mods() & pygame.KMOD_CTRL:
-                    self.origin.x -= event.y * TILE_SIZE / 2
+                    self.camera_position.centerx -= event.y * TILE_SIZE / 2
                 else:
-                    self.origin.y += event.y * TILE_SIZE / 2
+                    self.camera_position.centery -= event.y * TILE_SIZE / 2
 
         elif event.type == pygame.MOUSEBUTTONDOWN:
             mouse_data = event.pos, event.button, True
@@ -119,41 +126,14 @@ class Editor:
                 self.click(*mouse_data)
 
         elif event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_SPACE:
-                if not self.testing:
-                    self.testing = True
-                    self.spawn_blocks()
-                else:
-                    self.testing = False
-                    self.clear()
-            elif event.key == pygame.K_RETURN:
+            if event.key == pygame.K_RETURN:
                 self.start()
-
-    def draw_tile_lines(self):
-        """
-        draws the tiles(grid)
-        """
-        cols, rows = settings["Screen"]["Size"]
-
-        rows //= settings["Editor"]["TileSize"]
-        cols //= settings["Editor"]["TileSize"]
-
-        for col in range(cols + 1):
-            x = self.origin.x + col * settings["Editor"]["TileSize"]
-            x %= settings["Screen"]["Size"][0]
-            pygame.draw.line(self.display_surface, settings["Editor"]["GridColor"],
-                             (x, 0), (x, settings["Screen"]["Size"][1]))
-
-        for row in range(rows + 1):
-            y = self.origin.y + row * settings["Editor"]["TileSize"]
-            y %= settings["Screen"]["Size"][1]
-            pygame.draw.line(self.display_surface, settings["Editor"]["GridColor"],
-                             (0, y), (settings["Screen"]["Size"][0], y))
 
     def click(self, location: tuple[int, int], button_type: int, down: bool) -> bool:
         if not down:
             return False
-        tile_cords = int((location[0] - self.origin[0]) // TILE_SIZE), int((location[1] - self.origin[1]) // TILE_SIZE)
+        tile_cords = self.camera.get_mouse_pos(location, True)
+        tile_cords = int(tile_cords[0] // TILE_SIZE), int(tile_cords[1] // TILE_SIZE)
 
         if tile_cords not in self.canvas_data:
             if button_type != pygame.BUTTON_LEFT:
@@ -161,9 +141,14 @@ class Editor:
             if isinstance(self.selected_block, tuple):
                 self.canvas_data[tile_cords] = EditorMenu.EditorTile(self.selected_block)
             elif self.selected_block == "player":
+                del self.canvas_data[self.player]
                 self.player = tile_cords
-        elif self.selected_block == "delete" and button_type == pygame.BUTTON_LEFT:
+                self.canvas_data[self.player] = "player"
+            self.update_camera()
+        elif self.selected_block == "delete" and button_type == pygame.BUTTON_LEFT and \
+                self.canvas_data[tile_cords] != "player":
             del self.canvas_data[tile_cords]
+            self.update_camera()
 
         elif button_type == pygame.BUTTON_RIGHT:
             tile = self.canvas_data[tile_cords]
@@ -179,51 +164,30 @@ class Editor:
         """
         starts the game loop
         """
-        self.draw()
+        self.camera.update()
+        self.camera.display()
+        # self.draw()
         self.event_loop(dt)
         self.draw_gui()
-        self.space.step(dt if self.testing else 0)
 
-    def draw_blocks(self):
-        if self.testing:
-            for block in self.active_blocks:
-                self.display_surface.blit(block.image, block.rect.move(*self.origin))
-            return
-        for coordinates, tile in self.canvas_data.items():
-            rect = pygame.rect.Rect(self.get_rel_cords(coordinates),
-                                    (TILE_SIZE, TILE_SIZE))
-            self.display_surface.blit(
-                pygame.transform.scale(tile.image, (TILE_SIZE, TILE_SIZE)), rect)
-
-    def spawn_blocks(self):
-        for coordinates, tile in self.canvas_data.items():
-            rect = pygame.rect.Rect(self.get_rel_cords(coordinates, False),
-                                    (TILE_SIZE, TILE_SIZE))
-            block = tile.main_block[0](self.space, rect, *tile.main_block[1],
-                                       **{name: val for name, (val, options, setter) in tile.main_block[2].items()})
-            self.active_blocks.append(block)
-
-    def clear(self):
-        for block in self.active_blocks:
-            self.space.remove(block, block.shape)
-        self.active_blocks.clear()
-
-    def get_rel_cords(self, cords, origin=True) -> (int, int):
-        return cords[0] * TILE_SIZE + (self.origin[0] if origin else 0), \
-               cords[1] * TILE_SIZE + (self.origin[1] if origin else 0)
+    def update_camera(self):
+        self.camera.clear()
+        for coordinate, tile in self.canvas_data.items():
+            dat = BaseObject()
+            if isinstance(tile, str):
+                if tile == "player":
+                    dat.image = pygame.transform.scale(PLAYER_HEAD, (TILE_SIZE, TILE_SIZE))
+                    dat.rect = pygame.Rect((coordinate[0] * TILE_SIZE, coordinate[1] * TILE_SIZE),
+                                           (TILE_SIZE, TILE_SIZE))
+                else:
+                    continue
+            else:
+                dat.image = pygame.transform.scale(tile.image, (TILE_SIZE, TILE_SIZE))
+                dat.rect = pygame.Rect((coordinate[0] * TILE_SIZE, coordinate[1] * TILE_SIZE), (TILE_SIZE, TILE_SIZE))
+            self.camera.append(dat)
 
     def draw_player(self):
-        rect = PLAYER_HEAD.get_rect().move(self.get_rel_cords(self.player))
-        self.display_surface.blit(pygame.transform.scale(PLAYER_HEAD, (TILE_SIZE, TILE_SIZE)), rect)
-
-    def draw(self):
-        self.display_surface.fill("white")
-        x = pygame.transform.scale(pygame.image.load("sprites/Gui/Gal.png"), (SCREEN_WIDTH, SCREEN_HEIGHT))
-        self.display_surface.blit(x, (0, 0))
-
-        self.draw_tile_lines()
-        self.draw_blocks()
-        self.draw_player()
+        self.display_surface.blit(pygame.transform.scale(PLAYER_HEAD, (TILE_SIZE, TILE_SIZE)), self.player)
 
     def draw_gui(self):
         if self.settings.active:
@@ -232,9 +196,11 @@ class Editor:
             self.menu.display(self.display_surface)
 
     def save_level(self):
-        level.save("Levels/Egg.lvl", self.player, self.canvas_data)
+        level.save("Levels/Egg.lvl", self.canvas_data)
 
     def load_level(self):
         self.canvas_data.clear()
-        self.player, data = level.load("Levels/Egg.lvl")
+        data = level.load("Levels/Egg.lvl")
+        print(data)
         self.canvas_data.update(data)
+        self.update_camera()

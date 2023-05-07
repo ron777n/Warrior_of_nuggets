@@ -12,10 +12,11 @@ from Utils import image_utils
 
 class BaseObject(pymunk.Body):
     rect: pygame.Rect
+    image: pygame.Surface
 
-    @property
-    def image(self) -> pygame.surface.Surface:
-        return pygame.surface.Surface((50, 50))
+    # @property
+    # def image(self) -> pygame.surface.Surface:
+    #     return pygame.surface.Surface((50, 50))
 
 
 class Solid(BaseObject):

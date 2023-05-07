@@ -1,6 +1,8 @@
 """
 yes
 """
+from typing import Optional, Union
+
 import pygame
 import pymunk
 from pymunk import pygame_util
@@ -21,24 +23,23 @@ class Game:
         self.level_name = level_name
 
         self.display_surface = pygame.display.get_surface()
-        player_spawn, data = level.load(level_name, True)
+        data = level.load(level_name, True)
 
         self.space = pymunk.Space()
         self.space.gravity = (0, 10)
 
-        self.camera = Camera(pygame.image.load("sprites/temp/background.jpg"), (SCREEN_WIDTH, SCREEN_HEIGHT))
-        self.player: Player = Player(self.space, player_spawn, camera=self.camera)
-        self.camera.append(self.player)
+        self.camera = Camera(("static", pygame.image.load("sprites/temp/background.jpg")),
+                             (SCREEN_WIDTH, SCREEN_HEIGHT))
+        self.player: Optional[Player] = None
         self.debug_options = pymunk.pygame_util.DrawOptions(self.display_surface)
 
         self.add_objects(data)
 
     def reset(self):
+        if self.player is None:
+            return
         self.camera.clear(self.space)
-        player_spawn, data = level.load(self.level_name, True)
-        self.player: Player = Player(self.space, player_spawn, camera=self.camera)
-        self.camera.append(self.player)
-
+        data = level.load(self.level_name, True)
         self.add_objects(data)
 
     def event_loop(self):
@@ -59,8 +60,13 @@ class Game:
         for location, tile in data.items():
             self.add_object(location, tile)
 
-    def add_object(self, location, data: EditorTile):
+    def add_object(self, location, data: Union[EditorTile, str]):
         rect = pygame.Rect((location[0], location[1]), (TILE_SIZE, TILE_SIZE))
+        if isinstance(data, str):
+            if data == "player":
+                self.player: Player = Player(self.space, location, camera=self.camera)
+                self.camera.append(self.player)
+            return
         self.camera.append(
             data.main_block[0](
                 self.space, rect,

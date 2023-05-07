@@ -27,8 +27,8 @@ class BoundTracker(Tracker):
     tracker stays inside its boundaries, if snapped
     """
 
-    def __init__(self, boundaries, target: Optional[pygame.Rect] = None):
-        super().__init__(target)
+    def __init__(self, boundaries, target: pygame.Rect, tracker_rect=pygame.Rect(0, 0, 50, 50)):
+        super().__init__(target, tracker_rect)
         self.offset = pygame.math.Vector2()
         self.boundaries = boundaries
         self.half_w = self.rect.width / 2

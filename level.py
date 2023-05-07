@@ -12,30 +12,34 @@ from physics.objects import Block, SlipperyBlock
 from settings import TILE_SIZE
 
 
-def save(filename, player_location, blocks_data):
-    save_json = dict()
-    save_json["Player"] = list(player_location)
-    save_json["Level"] = {}
+def save(filename, blocks_data):
+    os.makedirs(os.path.dirname(filename), exist_ok=True)
+    save_json = {}
     for location, data in blocks_data.items():
-        save_json["Level"][str(location)] = data.json
+        if isinstance(data, EditorMenu.EditorTile):
+            save_json[str(location)] = data.json
+        else:
+            save_json[str(location)] = data
 
     with open(filename, "w") as file:
         json.dump(save_json, file)
 
 
-def load(filename, scale=False):
+def load(filename, scale=False) -> dict:
     if not os.path.isfile(filename):
-        return (0, 0), {}
+        return {(0, 0): "player"}
     with open(filename, "r") as file:
         loaded = json.load(file)
 
-    player = tuple(loaded["Player"])
-    if scale:
-        player = player[0] * TILE_SIZE, player[1] * TILE_SIZE
-
     canvas_data = {}
 
-    for location, data in loaded["Level"].items():
+    for location, data in loaded.items():
+        location: str
+        comma = location.find(",")
+        location_tuple = (int(location[1:comma]), int(location[comma + 2:-1]))
+        if isinstance(data, str):
+            canvas_data[location_tuple] = "player"
+            continue
         if data[0] == "Block":
             block = Block
         elif data[0] == "SlipperyBlock":
@@ -50,13 +54,10 @@ def load(filename, scale=False):
         for key, (value, possible_values) in data[2].items():
             kwargs[key] = (value, possible_values)
 
-        location: str
-        comma = location.find(",")
-        location_tuple = (int(location[1:comma]), int(location[comma + 2:-1]))
         if scale:
             location_tuple = location_tuple[0] * TILE_SIZE, location_tuple[1] * TILE_SIZE
 
         canvas_data[location_tuple] = \
             EditorMenu.EditorTile((block, params, kwargs))
 
-    return player, canvas_data
+    return canvas_data
