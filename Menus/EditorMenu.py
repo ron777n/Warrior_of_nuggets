@@ -27,7 +27,8 @@ class EditorMenu(Gui.Menu):
 
     def __init__(self, set_functions: tuple[callable, ...], *classes: type[BaseObject]):
         self.selected_block = None
-        self.buttons: list[Gui.BaseGui] = []
+        self.buttons: dict[Gui.BaseGui, tuple[type, dict]] = {}  # Button: data
+        self.objects = []
         self.buttons_i = 0
         self.object_i = 1
 
@@ -56,10 +57,20 @@ class EditorMenu(Gui.Menu):
             self.scroll_rect.left + self.box_size * (self.buttons_i % self.columns),
             self.scroll_rect.top + self.box_size * (self.buttons_i // self.columns),
             self.box_size,
-            self.box_size)
+            self.box_size
+        )
+        annotations = class_type.__init__.__annotations__
+        for key, value in class_type.__init__.__kwdefaults__.items():
+            if key in annotations:
+                if key in values:
+                    value = values[key]
+                values[key] = (value, annotations[key])
         button_1 = Gui.Button(rect.inflate(-self.button_margin, -self.button_margin),
                               lambda: self.create_block(class_type, values), image=img)
-        self.buttons.append(button_1)
+        for button, (block_type, data) in self.buttons.items():
+            if block_type == class_type and values == data:
+                return
+        self.buttons[button_1] = (class_type, values)
         self.buttons_i += 1
 
     def add_object(self, func: (callable, Iterable, dict), text):
@@ -74,7 +85,7 @@ class EditorMenu(Gui.Menu):
         set_image.blit(player_text, (rect.width/player_text.size[0], player_text.size[1]/2))
         button_1 = Gui.Button(rect.inflate(-self.button_margin, -self.button_margin),
                               lambda: func[0](*func[1], **func[2]), image=set_image)
-        self.buttons.append(button_1)
+        self.objects.append(button_1)
         self.object_i += 1
 
     def create_buttons(self, classes):
@@ -101,6 +112,8 @@ class EditorMenu(Gui.Menu):
 
         for button in self.buttons:
             display_surface.blit(button.image, button.rect)
+        for object_gui in self.objects:
+            display_surface.blit(object_gui.image, object_gui.rect)
 
     def click(self, location: tuple[int, int], button_type: int, down: bool) -> bool:
         """
@@ -109,6 +122,8 @@ class EditorMenu(Gui.Menu):
         r = self.collide_point(location)
         for button in self.buttons:
             r = button.click(location, button_type, down) or r
+        for object_gui in self.objects:
+            r = object_gui.click(location, button_type, down) or r
         return r
 
     def collide_point(self, point):
