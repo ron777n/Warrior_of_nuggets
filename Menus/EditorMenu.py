@@ -9,6 +9,7 @@ import pygame.display
 import pymunk
 
 import level
+from Utils.Gui import NumberSetting, OptionSettings
 from Utils.image_utils import Text
 from physics.objects import Block, SlipperyBlock, Solid, BaseObject
 from settings import *
@@ -154,12 +155,12 @@ class EditorTile:
         for key, (value, possible_values) in selection[2].items():
             data_swap = None
             if isinstance(possible_values, str):
-                continue
+                if possible_values == "int":
+                    data_swap = lambda rect, connection: NumberSetting(rect, connection)
+                else:
+                    continue
             elif isinstance(possible_values, Iterable):
-                data_swap = itertools.cycle(possible_values)
-                for val in data_swap:
-                    if val == value:
-                        break
+                data_swap = lambda rect, connection: OptionSettings(rect, connection)
             if data_swap is not None:
                 block_data[key] = [value, possible_values, data_swap]
         self.main_block: tuple[type(Solid), tuple, dict[any, list[any, any, any]]] = \
@@ -182,7 +183,7 @@ class TileMenu(Gui.Menu):
     def __init__(self, save_block):
         top_left = (SCREEN_WIDTH - width - margin, SCREEN_HEIGHT - height - margin)
         self.rect = pygame.Rect(top_left, (width, height))
-        self.buttons = {}
+        self.buttons = []
         self.active = False
         self.current = None
         self.background = pygame.transform.scale(pygame.image.load("sprites/Gui/BlocksMenu.png"), self.rect.size)
@@ -191,18 +192,17 @@ class TileMenu(Gui.Menu):
         # button areas
         self.button_margin = 5
         self.button_count = 1
-        self.box_size = width / (self.columns + 1)
+        self.box_size = width
         self.save_block = save_block
         self.data = None
 
-    def add_setting(self, obj: str, connection, func, params, kwargs):
+    def add_setting(self, connection):
         rect = pygame.rect.Rect(self.rect.left + self.box_size * (self.button_count % self.columns),
                                 self.rect.top + self.box_size * ((self.button_count - 1) // self.columns),
                                 self.box_size, self.box_size)
 
-        if obj == "Button":
-            button_1 = Gui.Button(rect.inflate(-self.button_margin, -self.button_margin), (func, params, kwargs))
-            self.buttons[button_1] = connection
+        button = connection[2](rect, connection)
+        self.buttons.append(button)
         self.button_count += 1
 
     def save_current(self):
@@ -222,28 +222,14 @@ class TileMenu(Gui.Menu):
         data = {}
         for key, item in tile.main_block[2].items():
             data[key] = item[0]
-        self.add_setting("Button", None, self.save_current, (), {})
-        for name, (value, possible_values, swapper) in tile.main_block[2].items():
-            func: callable = lambda: 0
-            if isinstance(swapper, Iterable):
-                def func():
-                    a = next(swapper)
-                    tile.main_block[2][name][:] = [a, possible_values, swapper]
-            self.add_setting("Button", tile.main_block[2][name], func, (), {})
+        # self.add_setting("Button", None, self.save_current, (), {})
+        for name, connection in tile.main_block[2].items():
+            self.add_setting(connection)
 
     def display(self, display_surface: pygame.surface.Surface):
         display_surface.blit(self.background, self.rect)
-        for button, value in self.buttons.items():
+        for button in self.buttons:
             display_surface.blit(button.image, button.rect)
-            if value is None:
-                continue
-            img = pygame.surface.Surface(button.rect.size)
-            img.fill("red")
-            rect = img.get_rect().copy()
-            text = image_utils.Text(str(value[0])).wrap(rect.size)
-
-            img.blit(text, rect)
-            display_surface.blit(img, button.rect.move((width // 2, 0)))
 
     def click(self, location: tuple[int, int], button_type: int, down: bool) -> bool:
         r = self.rect.collidepoint(location)

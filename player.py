@@ -28,6 +28,7 @@ class Player(Solid):
         self.dash_timer = Timer(self.DASH_COOL_DOWN)
         self.velocity_func = self.velocity_function
         self.position_func = self.position_function
+
         if camera is not None:
             camera.tracker = Tracker(self._rect, pygame.Rect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT))
 
@@ -80,6 +81,7 @@ class Player(Solid):
             self.set_speed((self.moving * self.PLAYER_SPEED, None))
 
     @property
-    def image(self):
+    def image(self) -> pygame.Surface:
         self._rect.center = self.position
-        return self.image_.copy()
+        img = self.image_.copy()
+        return img
