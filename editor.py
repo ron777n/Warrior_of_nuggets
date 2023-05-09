@@ -110,11 +110,13 @@ class Editor:
             mouse_data = event.pos, event.button, True
             if not ((self.settings.active and self.settings.click(*mouse_data)) or self.menu.click(*mouse_data)):
                 self.click(*mouse_data)
+            self.update_camera()
 
         elif event.type == pygame.MOUSEBUTTONUP:
             mouse_data = event.pos, event.button, False
             if (self.settings.active and not self.settings.click(*mouse_data)) or not self.menu.click(*mouse_data):
                 self.click(*mouse_data)
+            self.update_camera()
 
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_RETURN:
@@ -174,7 +176,8 @@ class Editor:
                 else:
                     continue
             else:
-                dat.image = pygame.transform.scale(tile.image, (TILE_SIZE, TILE_SIZE))
+                image = pygame.image.load(tile.main_block[2]["image_path"][0])
+                dat.image = pygame.transform.scale(image, (TILE_SIZE, TILE_SIZE))
                 dat.rect = pygame.Rect((coordinate[0] * TILE_SIZE, coordinate[1] * TILE_SIZE), (TILE_SIZE, TILE_SIZE))
             self.camera.append(dat)
 

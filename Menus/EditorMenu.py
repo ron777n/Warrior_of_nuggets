@@ -9,7 +9,7 @@ import pygame.display
 import pymunk
 
 import level
-from Utils.Gui import NumberSetting, OptionSettings
+from Utils.Gui import FileSetting, NumberSetting, OptionSettings
 from Utils.image_utils import Text
 from physics.objects import Solid, BaseObject
 from settings import *
@@ -157,6 +157,8 @@ class EditorTile:
             if isinstance(possible_values, str):
                 if possible_values == "int":
                     data_swap = lambda rect, connection: NumberSetting(rect, connection)
+                elif possible_values == "PathLike":
+                    data_swap = lambda rect, connection: FileSetting(rect, connection)
                 else:
                     continue
             elif isinstance(possible_values, Iterable):

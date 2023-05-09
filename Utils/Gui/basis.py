@@ -11,6 +11,7 @@ class BaseGui(abc.ABC):
     The base gui class
     """
     rect: pygame.Rect
+    image: pygame.Surface
 
     def click(self, location: tuple[int, int], button_type: int, down: bool) -> bool:
         """
@@ -24,13 +25,6 @@ class BaseGui(abc.ABC):
         """
         pass
 
-    @property
-    def image(self) -> pygame.surface.Surface:
-        """
-        returns the image to display of the object
-        """
-        return pygame.surface.Surface((50, 50))
-
     def collide_point(self, point) -> bool:
         """
         checks if the point hits the gui
@@ -43,7 +37,8 @@ class Button(BaseGui):
     simple object that is clickable
     """
 
-    def __init__(self, rect: pygame.Rect, on_click, image: pygame.Surface = pygame.Surface((50, 50))):
+    def __init__(self, rect: pygame.Rect, on_click,
+                 image: pygame.Surface = pygame.image.load("sprites/Gui/Button.png")):
         # super().__init__()
         self.on_click: callable
         if callable(on_click):
@@ -52,7 +47,7 @@ class Button(BaseGui):
             self.on_click = lambda: on_click[0](*on_click[1], **on_click[2])
         self.rect = rect.copy()
         self.clicked = False
-        self._image = pygame.transform.scale(image, self.rect.size)
+        self.base_image = pygame.transform.scale(image, self.rect.size)
 
     def click(self, location: tuple[int, int], button_type: int, down: bool):
         """
@@ -74,7 +69,7 @@ class Button(BaseGui):
         little opacity while button held
         """
         alpha = 127 if self.clicked else 255
-        img = self._image.copy()
+        img = self.base_image.copy()
         img.set_alpha(alpha)
         return img
 

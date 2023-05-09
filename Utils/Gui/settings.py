@@ -1,5 +1,5 @@
 import itertools
-from typing import Iterable
+from tkinter import filedialog
 
 import pygame
 
@@ -77,3 +77,36 @@ class OptionSettings(BaseGui):
         self.button.click(location, button_type, down)
 
         return collided
+
+
+class FileSetting(BaseGui):
+    def __init__(self, rect: pygame.Rect, connection, background=pygame.Surface((50, 50))):
+        self.background_image = pygame.transform.scale(background, rect.size)
+        self.rect = rect.copy()
+        self.connection = connection
+        self.base_button_image = pygame.transform.scale(pygame.image.load("sprites/Gui/Button.png"), self.rect.size)
+        self.button = Button(rect, self.set_file, self.base_button_image)
+        self.update_button_image(self.connection[0])
+
+    def update_button_image(self, path: str):
+        img = self.base_button_image.copy()
+        text = Text(path[path.rfind("/") + 1:])
+        img.blit(text, (0, 0))
+        self.button.base_image = img
+
+    def set_file(self):
+        path = filedialog.askopenfilename()
+        self.update_button_image(path)
+        self.connection[0] = path
+
+    def click(self, location: tuple[int, int], button_type: int, down: bool) -> bool:
+        collided = self.rect.collidepoint(location)
+        self.button.click(location, button_type, down)
+
+        return collided
+
+    @property
+    def image(self) -> pygame.Surface:
+        img = self.background_image.copy()
+        img.blit(self.button.image, (0, 0))
+        return img
