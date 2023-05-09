@@ -9,7 +9,7 @@ from typing import Iterable
 import pymunk
 
 from Menus import EditorMenu
-from physics.objects import Block, SlipperyBlock
+from physics.objects import Solid
 from settings import TILE_SIZE
 
 
@@ -48,12 +48,10 @@ def load(filename, editor=False) -> dict:
         if isinstance(data, str):
             canvas_data[location_tuple] = "player"
             continue
-        if data[0] == "Block":
-            block = Block
-        elif data[0] == "SlipperyBlock":
-            block = SlipperyBlock
+        if data[0] == "Solid":
+            block = Solid
         else:
-            block = Block
+            continue
 
         params: tuple = data[1]
 
@@ -61,7 +59,6 @@ def load(filename, editor=False) -> dict:
 
         for key, (value, possible_values) in data[2].items():
             kwargs[key] = (value, possible_values)
-
 
         canvas_data[location_tuple] = \
             EditorMenu.EditorTile((block, params, kwargs))

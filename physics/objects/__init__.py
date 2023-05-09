@@ -1,6 +1,7 @@
 """
 pass
 """
+import os
 from enum import Enum
 from typing import Final, Literal
 
@@ -16,11 +17,11 @@ class BaseObject(pymunk.Body):
 
 
 class Solid(BaseObject):
-    base_image: pygame.surface.Surface
+    base_image: pygame.surface.Surface = pygame.image.load("sprites/objects/block.png")
 
     def __init__(self, space, rect: pygame.rect.Rect, *, mass: int = 100,
-                 body_type: Literal["DYNAMIC", "STATIC"] = "STATIC", friction: float = 0.95):
-        # assert body_type in Literal["DYNAMIC", "KINEMATIC", "STATIC"], "Invalid body type"
+                 body_type: Literal["DYNAMIC", "STATIC"] = "STATIC",
+                 friction: float = 0.95, image_path: os.PathLike = "sprites/objects/block.png"):
         body_type = getattr(pymunk.Body, body_type)
         super().__init__(mass=mass, body_type=body_type)
         self.shape = pymunk.Poly.create_box(self, size=rect.size)
@@ -30,6 +31,7 @@ class Solid(BaseObject):
         self._rect = rect
         self.original_size = rect.size
         space.add(self, self.shape)
+        self.base_image = pygame.image.load(image_path)
 
     @property
     def rect(self) -> pygame.rect.Rect:
@@ -42,15 +44,3 @@ class Solid(BaseObject):
         self._rect.size = img.get_size()
         self._rect.center = self.position[0], self.position[1]
         return img
-
-
-class Block(Solid):
-    base_image = pygame.image.load("sprites/objects/block.png")
-
-
-class SlipperyBlock(Block):
-    base_image = image_utils.tint_image(Block.base_image, (0, 0, 255), 200)
-
-    def __init__(self, space, rect: pygame.rect.Rect, *, mass: int = 100, moment: int = 0,
-                 body_type: Literal["DYNAMIC", "STATIC"] = "STATIC", friction: float = 0.95):
-        super().__init__(space, rect, mass=mass, body_type=body_type, friction=0.05)

@@ -11,7 +11,7 @@ from pymunk.pygame_util import DrawOptions
 
 import level
 from Menus import EditorMenu
-from physics.objects import BaseObject, Block, SlipperyBlock
+from physics.objects import BaseObject, Solid
 
 from settings import *
 from Utils.camera import Camera
@@ -55,7 +55,7 @@ class Editor:
         self.canvas_data: dict[tuple[int, int], Union[EditorMenu.EditorTile, str]] = {}
 
         self.menu = EditorMenu.EditorMenu(
-            (self.set_block, self.set_player, self.delete_block, self.start, self.save_level), Block, SlipperyBlock)
+            (self.set_block, self.set_player, self.delete_block, self.start, self.save_level), Solid)
         self.settings = EditorMenu.TileMenu(self.menu.add_button)
         self.load_level()
 
@@ -197,10 +197,8 @@ class Editor:
         self.canvas_data.update(data["Level"])
         self.update_camera()
         for block, button_data in data["Editor"]:
-            if block == "Block":
-                class_type = Block
-            elif block == "SlipperyBlock":
-                class_type = SlipperyBlock
+            if block == "Solid":
+                class_type = Solid
             else:
                 continue
             button_data = {key: val[0] for key, val in button_data.items()}

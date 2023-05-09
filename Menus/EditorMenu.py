@@ -11,7 +11,7 @@ import pymunk
 import level
 from Utils.Gui import NumberSetting, OptionSettings
 from Utils.image_utils import Text
-from physics.objects import Block, SlipperyBlock, Solid, BaseObject
+from physics.objects import Solid, BaseObject
 from settings import *
 from Utils import Gui, image_utils
 
@@ -222,7 +222,7 @@ class TileMenu(Gui.Menu):
         data = {}
         for key, item in tile.main_block[2].items():
             data[key] = item[0]
-        # self.add_setting("Button", None, self.save_current, (), {})
+        # self.add_setting("Button", None, self.save_current)
         for name, connection in tile.main_block[2].items():
             self.add_setting(connection)
 
