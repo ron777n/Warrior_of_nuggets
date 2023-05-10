@@ -187,11 +187,11 @@ class Editor:
 
     def save_level(self):
         buttons = self.menu.get_buttons()
-        level.save("Levels/Egg.lvl", self.canvas_data, buttons)
+        level.save(self.level_name, self.canvas_data, buttons)
 
     def load_level(self):
         self.canvas_data.clear()
-        data = level.load("Levels/Egg.lvl", True)
+        data = level.load(self.level_name, True)
         self.canvas_data.update(data["Level"])
         self.update_camera()
         for block, button_data in data["Editor"]:

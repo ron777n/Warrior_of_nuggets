@@ -7,6 +7,19 @@ from editor import Editor
 
 from settings import *
 from game import Game
+from tkinter.filedialog import asksaveasfilename
+import sys
+
+if len(sys.argv) < 2:
+    level_name = "Levels/egg.lvl"
+elif len(sys.argv) == 2:
+    if sys.argv[1] == "pick":
+        level_name = asksaveasfilename()
+    else:
+        level_name = "Levels/egg.lvl"
+else:
+    print("Invalid Arguments")
+    exit()
 
 
 class Main:
@@ -25,9 +38,10 @@ class Main:
         cursor_surf = pygame.image.load(settings["Cursor"]["Icon"]).convert_alpha()
         cursor = pygame.Cursor(tuple(settings["Cursor"]["ClickCord"]), cursor_surf)
         pygame.mouse.set_cursor(cursor)
+        self.level_name = level_name
 
-        self.game = Game(self.transition, "Levels/Egg.lvl")
-        self.editor = Editor(self.transition, "Levels/Egg.lvl")
+        self.game = Game(self.transition, self.level_name)
+        self.editor = Editor(self.transition, self.level_name)
 
     def run(self):
         """
