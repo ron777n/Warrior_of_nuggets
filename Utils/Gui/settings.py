@@ -4,7 +4,7 @@ from tkinter import filedialog
 import pygame
 
 from .basis import BaseGui, Button
-from Utils.image_utils import Text
+from .image_utils import Text
 
 margin = 5
 
@@ -130,3 +130,4 @@ class FileSetting(BaseSetting):
         img = super().image
         img.blit(self.button.image, (0, 0))
         return img
+

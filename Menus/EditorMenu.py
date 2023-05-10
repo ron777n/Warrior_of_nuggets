@@ -9,8 +9,7 @@ import pygame.display
 from physics.objects import BaseObject, Solid
 from settings import *
 from Utils import Gui
-from Utils.Gui import FileSetting, NumberSetting, OptionSettings
-from Utils.image_utils import Text
+from Utils.Gui import FileSetting, NumberSetting, OptionSettings, Text
 
 margin = 0
 width = 192
@@ -225,7 +224,11 @@ class TileMenu(Gui.Menu):
         data = {}
         for key, item in tile.main_block[2].items():
             data[key] = item[0]
-        # self.add_setting("Button", None, self.save_current)
+        save_btn = Gui.Button(pygame.Rect(self.rect.topleft, (self.rect.width, self.rect.width / 2)), self.save_current)
+        add_text = Gui.Text("Save Block to collection")
+        add_text.wrap(save_btn.rect.size).draw(save_btn.base_image)
+        self.buttons.append(save_btn)
+        self.add_location += self.rect.width / 2
         for name, connection in tile.main_block[2].items():
             self.add_setting(connection)
 
