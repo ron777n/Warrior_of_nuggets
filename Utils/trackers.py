@@ -1,7 +1,4 @@
-from typing import Optional
-
-import pygame.sprite
-from pygame import Vector2
+import pygame
 
 
 class Tracker:

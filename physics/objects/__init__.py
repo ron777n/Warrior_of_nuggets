@@ -2,13 +2,10 @@
 pass
 """
 import os
-from enum import Enum
-from typing import Final, Literal
+from typing import Literal
 
 import pygame
 import pymunk
-
-from Utils import image_utils
 
 
 class BaseObject(pymunk.Body):

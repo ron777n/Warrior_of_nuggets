@@ -1,12 +1,8 @@
 """
 The level
 """
-import itertools
 import json
 import os
-from typing import Iterable
-
-import pymunk
 
 from Menus import EditorMenu
 from physics.objects import Solid

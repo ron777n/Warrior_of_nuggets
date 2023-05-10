@@ -1,19 +1,16 @@
 """
 The menu for the editor
 """
-import itertools
 import typing
 from collections.abc import Iterable
 
 import pygame.display
-import pymunk
 
-import level
+from physics.objects import BaseObject, Solid
+from settings import *
+from Utils import Gui
 from Utils.Gui import FileSetting, NumberSetting, OptionSettings
 from Utils.image_utils import Text
-from physics.objects import Solid, BaseObject
-from settings import *
-from Utils import Gui, image_utils
 
 margin = 0
 width = 192

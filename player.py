@@ -3,11 +3,11 @@ from typing import Optional
 import pygame
 import pymunk
 
-from Utils.Timers import Timer
 from physics.objects import Solid
 from settings import SCREEN_HEIGHT, SCREEN_WIDTH
 from Utils.camera import Camera
-from Utils.trackers import BoundTracker, Tracker
+from Utils.Timers import Timer
+from Utils.trackers import Tracker
 
 
 class Player(Solid):

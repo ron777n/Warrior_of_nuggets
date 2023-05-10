@@ -5,7 +5,7 @@ import pymunk
 
 from physics.objects import BaseObject
 from settings import SCREEN_HEIGHT, SCREEN_WIDTH
-from Utils.trackers import BoundTracker, Tracker
+from Utils.trackers import Tracker
 
 
 class Camera:

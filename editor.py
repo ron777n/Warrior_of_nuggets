@@ -1,21 +1,16 @@
 """
 This is for the level creator.
 """
+import json
 from typing import Union
 
 import pygame
-import pymunk
-from pygame.math import Vector2
-import json
-from pymunk.pygame_util import DrawOptions
 
 import level
 from Menus import EditorMenu
 from physics.objects import BaseObject, Solid
-
 from settings import *
 from Utils.camera import Camera
-from Utils.trackers import Tracker
 
 with open("settings.json") as f:
     settings = json.load(f)
