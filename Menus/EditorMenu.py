@@ -156,13 +156,13 @@ class EditorTile:
             data_swap = None
             if isinstance(possible_values, str):
                 if possible_values == "int":
-                    data_swap = lambda rect, connection: NumberSetting(rect, connection)
+                    data_swap = NumberSetting
                 elif possible_values == "PathLike":
-                    data_swap = lambda rect, connection: FileSetting(rect, connection)
+                    data_swap = FileSetting
                 else:
                     continue
             elif isinstance(possible_values, Iterable):
-                data_swap = lambda rect, connection: OptionSettings(rect, connection)
+                data_swap = OptionSettings
             if data_swap is not None:
                 block_data[key] = [value, possible_values, data_swap]
         self.main_block: tuple[type(Solid), tuple, dict[any, list[any, any, any]]] = \
@@ -193,19 +193,22 @@ class TileMenu(Gui.Menu):
         self.columns = 1
         # button areas
         self.button_margin = 5
-        self.button_count = 1
+        self.add_location = 0
+        self.row_count = 1
         self.box_size = width
         self.save_block = save_block
         self.data = None
 
     def add_setting(self, connection):
-        rect = pygame.rect.Rect(self.rect.left + self.box_size * (self.button_count % self.columns),
-                                self.rect.top + self.box_size * ((self.button_count - 1) // self.columns),
-                                self.box_size, self.box_size)
+        scale = connection[2].scale
+        rect = pygame.rect.Rect(self.rect.left + self.box_size * (self.row_count % self.columns),
+                                self.rect.top + self.add_location,
+                                self.box_size, self.box_size * scale)
 
         button = connection[2](rect, connection)
         self.buttons.append(button)
-        self.button_count += 1
+        self.add_location += rect.height
+        # self.row_count = (self.row_count + 1) % self.columns
 
     def save_current(self):
         data = {}
@@ -218,7 +221,8 @@ class TileMenu(Gui.Menu):
         self.active = True
         self.current = tile
         self.buttons.clear()
-        self.button_count = 1
+        self.add_location = 0
+        self.row_count = 1
         self.data = (tile.main_block[0], tile.main_block[2])
 
         data = {}
