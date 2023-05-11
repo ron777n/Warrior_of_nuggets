@@ -116,6 +116,10 @@ class Editor:
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_RETURN:
                 self.start()
+            elif event.key == pygame.K_EQUALS:
+                self.camera.zoom(2)
+            elif event.key == pygame.K_MINUS:
+                self.camera.zoom(0.5)
 
     def click(self, location: tuple[int, int], button_type: int, down: bool) -> bool:
         if not down:

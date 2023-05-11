@@ -88,8 +88,8 @@ class Camera:
     def get_mouse_pos(self, pos, global_pos=False) -> tuple[float, float]:
         x, y = pos
         offset_x, offset_y = self.tracker.rect.topleft
-        x = (offset_x if global_pos else 0) + x / (self.cam_size[0] / self.original_cam_size[0])
-        y = (offset_y if global_pos else 0) + y / (self.cam_size[1] / self.original_cam_size[1])
+        x = (offset_x if global_pos else 0) + x * (self.cam_size[0] / self.original_cam_size[0])
+        y = (offset_y if global_pos else 0) + y * (self.cam_size[1] / self.original_cam_size[1])
         return x, y
 
 
