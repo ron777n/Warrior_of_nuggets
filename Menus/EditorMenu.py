@@ -40,7 +40,8 @@ class EditorMenu(Gui.Menu):
         self.columns1 = 2
         self.box_size = width / self.columns
         self.background = pygame.transform.scale(pygame.image.load("sprites/Gui/BlocksMenu.png"), self.scroll_rect.size)
-        self.background1 = pygame.transform.scale(pygame.image.load("sprites/Gui/BlocksMenu.png"), self.button_rect.size)
+        self.background1 = pygame.Surface(self.button_rect.size)
+        self.background1.fill("#1C2833")
 
         self.create_block = set_functions[0]
         self.set_player = set_functions[1]
@@ -77,17 +78,15 @@ class EditorMenu(Gui.Menu):
         self.buttons[button_1] = (class_type, values)
         self.buttons_i += 1
 
-    def add_object(self, func: (callable, Iterable, dict), text):
+    def add_object(self, func: (callable, Iterable, dict), image_path):
         rect = pygame.rect.Rect(
             self.button_rect.left + self.box_size * (self.object_i % self.columns1),
             self.button_rect.top + self.box_size * ((self.object_i - 1) // self.columns1),
             self.box_size,
             self.box_size)
 
-        base_image = pygame.image.load("sprites/Gui/Button.png")
+        base_image = pygame.image.load(image_path)
         set_image = pygame.transform.scale(base_image, rect.size)
-        player_text = Text(text, (255, 0, 0))
-        set_image.blit(player_text, (rect.width/player_text.size[0], player_text.size[1]/2))
         button_1 = Gui.Button(rect.inflate(-self.button_margin, -self.button_margin),
                               lambda: func[0](*func[1], **func[2]), image=set_image)
         self.objects.append(button_1)
@@ -97,13 +96,13 @@ class EditorMenu(Gui.Menu):
         """
         just creates all the buttons
         """
-        self.add_object((self.set_player, (), {}), "player")
+        self.add_object((self.set_player, (), {}), "sprites/Gui/Buttons/ButtonPlayer.png")
 
-        self.add_object((self.delete_block, (), {}), "delete")
+        self.add_object((self.delete_block, (), {}), "sprites/Gui/Buttons/ButtonErase.png")
 
-        self.add_object((self.start_button, (), {},),  "start")
+        self.add_object((self.start_button, (), {},),  "sprites/Gui/Buttons/ButtonStart.png")
 
-        self.add_object((self.save_level, (), {},), "save")
+        self.add_object((self.save_level, (), {},), "sprites/Gui/Buttons/ButtonSave.png")
 
         for i, class_type in enumerate(classes, start=1):
             self.add_button(class_type, {}, class_type.base_image)

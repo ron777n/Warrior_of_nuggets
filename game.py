@@ -48,6 +48,7 @@ class Game:
         self.player.update()
         self.camera.update()
         self.camera.display()
+        self.display_menus()
         self.space.step(dt)
 
     def add_objects(self, data):
@@ -78,4 +79,16 @@ class Game:
                 self.camera.zoom(2)
             elif event.key == pygame.K_MINUS:
                 self.camera.zoom(0.5)
+        elif event.type == pygame.MOUSEBUTTONDOWN:
+            if self.player.inventory_active:
+                if self.player.inventory.click(event.pos, event.button, True):
+                    return
+        elif event.type == pygame.MOUSEBUTTONUP:
+            if self.player.inventory_active:
+                if self.player.inventory.click(event.pos, event.button, False):
+                    return
         self.player.handle_event(event)
+
+    def display_menus(self):
+        if self.player.inventory_active:
+            self.player.inventory.display(self.display_surface)
