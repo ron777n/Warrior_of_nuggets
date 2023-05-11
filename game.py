@@ -8,7 +8,7 @@ import pymunk
 from pymunk import pygame_util
 
 import level
-from Menus.EditorMenu import EditorTile
+from Utils.Gui.Menus.EditorMenu import EditorTile
 from player import Player
 from settings import SCREEN_HEIGHT, SCREEN_WIDTH, TILE_SIZE
 from Utils.camera import Camera

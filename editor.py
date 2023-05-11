@@ -7,7 +7,7 @@ from typing import Union
 import pygame
 
 import level
-from Menus import EditorMenu
+from Utils.Gui.Menus import EditorMenu
 from physics.objects import BaseObject, Solid
 from settings import *
 from Utils.camera import Camera

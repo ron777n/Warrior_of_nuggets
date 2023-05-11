@@ -4,7 +4,7 @@ The level
 import json
 import os
 
-from Menus import EditorMenu
+from Utils.Gui.Menus import EditorMenu
 from physics.objects import Solid
 from settings import TILE_SIZE
 

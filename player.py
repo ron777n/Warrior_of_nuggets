@@ -3,7 +3,7 @@ from typing import Optional
 import pygame
 import pymunk
 
-from Menus.Inventory import Inventory, Nugget, ShotGun
+from Utils.Gui.Menus.Inventory import Inventory, Nugget, ShotGun
 from physics.objects import Solid
 from settings import SCREEN_HEIGHT, SCREEN_WIDTH
 from Utils.camera import Camera
@@ -37,6 +37,8 @@ class Player(Solid):
         self.inventory_active = False
         self.inventory = Inventory()
         self.inventory.add_item(ShotGun())
+        self.inventory.add_item(ShotGun())
+        self.inventory.add_item(Nugget())
         self.inventory.add_item(Nugget())
 
     @staticmethod
@@ -74,9 +76,10 @@ class Player(Solid):
             elif event.key == pygame.K_a and self.moving == -1:
                 self.moving = 0
         elif event.type == pygame.MOUSEBUTTONDOWN:
-            item = self.inventory.current_item
-            if item is not None:
-                item.use_item(self.rect.center, self.camera.get_mouse_pos(event.pos, True), event.button, True)
+            self.inventory.use_selected_item(self.rect.center,
+                                             self.camera.get_mouse_pos(event.pos, True),
+                                             event.button,
+                                             True)
 
     def set_speed(self, speed: tuple[Optional[int], Optional[int]]):
         if speed[0] is not None:

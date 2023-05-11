@@ -1,3 +1,4 @@
+import abc
 from typing import Optional
 
 import pygame
@@ -6,10 +7,10 @@ from settings import SCREEN_HEIGHT, SCREEN_WIDTH
 from Utils import Gui
 
 
-class Item:
+class Item(abc.ABC):
     image: pygame.Surface
 
-    def use_item(self, start_pos, end_pos, button: int, down: bool):
+    def use_item(self, start_pos, end_pos, button: int, down: bool) -> bool:
         """
         Uses the item
 
@@ -18,6 +19,9 @@ class Item:
 
         use_type: is the buttons of the use, middle click right click etc, and whether it's a down click or an up click
         """
+        pass
+
+    def add_to_item(self, item) -> bool:
         pass
 
 
@@ -49,11 +53,10 @@ class Inventory(Gui.Menu):
             if item is None:
                 self.items[i] = item_to_add
                 return True
+            if type(item) == type(item_to_add):
+                if item.add_to_item(item_to_add):
+                    return True
         return False
-
-    @property
-    def current_item(self) -> Optional[Item]:
-        return self.items[self.current_item_index]
 
     def click(self, location: tuple[int, int], button_type: int, down: bool) -> bool:
         r = self.rect.collidepoint(location)
@@ -62,10 +65,17 @@ class Inventory(Gui.Menu):
         if r and button_type == pygame.BUTTON_LEFT:
             if down:
                 self.holding = inventory_id
-            else:
+            elif self.items[inventory_id] is None:
                 item = self.items[self.holding]
                 self.items[self.holding] = None
                 self.items[inventory_id] = item
         elif r and button_type == pygame.BUTTON_RIGHT:
             self.current_item_index = inventory_id
         return r
+
+    def use_selected_item(self, start_pos, end_pos, button: int, down: bool):
+        item = self.items[self.current_item_index]
+        if item is not None:
+            should_delete = item.use_item(start_pos, end_pos, button, down)
+            if should_delete:
+                self.items[self.current_item_index] = None
