@@ -36,10 +36,10 @@ class Player(Solid):
 
         self.inventory_active = False
         self.inventory = Inventory()
-        self.inventory.add_item(ShotGun())
-        self.inventory.add_item(ShotGun())
-        self.inventory.add_item(Nugget())
-        self.inventory.add_item(Nugget())
+        self.inventory.add_item(ShotGun(self.space, self.camera))
+        self.inventory.add_item(ShotGun(self.space, self.camera))
+        self.inventory.add_item(Nugget(self.space, self.camera))
+        self.inventory.add_item(Nugget(self.space, self.camera))
 
     @staticmethod
     def velocity_function(body: 'Player', gravity, damping, dt):
@@ -49,7 +49,7 @@ class Player(Solid):
         body.angular_velocity = 0.0
 
     @staticmethod
-    def position_function(body, dt):
+    def position_function(body: 'Player', dt):
         pymunk.Body.update_position(body, dt)
         body.angle = 0
         body.angular_velocity = 0.0

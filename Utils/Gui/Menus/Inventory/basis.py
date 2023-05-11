@@ -2,13 +2,18 @@ import abc
 from typing import Optional
 
 import pygame
+import pymunk
 
 from settings import SCREEN_HEIGHT, SCREEN_WIDTH
 from Utils import Gui
 
 
-class Item(abc.ABC):
+class Item:
     image: pygame.Surface
+
+    def __init__(self, space: pymunk.Space, camera):
+        self.space = space
+        self.camera = camera
 
     def use_item(self, start_pos, end_pos, button: int, down: bool) -> bool:
         """
