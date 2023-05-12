@@ -3,7 +3,8 @@ from typing import Optional
 import pygame
 import pymunk
 
-from Utils.Gui.Menus.Inventory import Inventory, Nugget, ShotGun
+from Inventory import *
+from my_events import PLAYER_DIED_EVENT
 from physics.objects import Solid
 from settings import SCREEN_HEIGHT, SCREEN_WIDTH
 from Utils.camera import Camera
@@ -16,6 +17,7 @@ class Player(Solid):
     DASH_COOL_DOWN = 700
     DOUBLE_PRESS_COOL_DOWN = 200
     DASH_POWER = 5
+    BASE_HEALTH = 100
 
     def __init__(self, space, pos, *, camera: Optional[Camera] = None):
         self.image_ = pygame.transform.scale(pygame.image.load("sprites/Player/Player.png"), (100, 200))
@@ -30,16 +32,19 @@ class Player(Solid):
         self.velocity_func = self.velocity_function
         self.position_func = self.position_function
         self.camera = camera
+        self.health = self.BASE_HEALTH
 
         if camera is not None:
             camera.tracker = Tracker(self._rect, pygame.Rect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT))
 
         self.inventory_active = False
         self.inventory = Inventory()
-        self.inventory.add_item(ShotGun(self.space, self.camera))
-        self.inventory.add_item(ShotGun(self.space, self.camera))
-        self.inventory.add_item(Nugget(self.space, self.camera))
-        self.inventory.add_item(Nugget(self.space, self.camera))
+        self.inventory.add_item(ShotGun(self.space, self.camera, self))
+        self.inventory.add_item(ShotGun(self.space, self.camera, self))
+        self.inventory.add_item(Nugget(self.space, self.camera, self))
+        self.inventory.add_item(Nugget(self.space, self.camera, self))
+        self.inventory.add_item(Knife(self.space, self.camera, self))
+        self.inventory.add_item(Nugget(self.space, self.camera, self))
 
     @staticmethod
     def velocity_function(body: 'Player', gravity, damping, dt):
@@ -101,3 +106,19 @@ class Player(Solid):
         self._rect.center = self.position
         img = self.image_.copy()
         return img
+
+    def hit_local(self, impulse_vector: pymunk.Vec2d, local_position):
+        super().hit_local(impulse_vector, local_position)
+        power = abs(impulse_vector)
+        if power > 100:
+            self.damage(power / 100)
+
+    def damage(self, amount):
+        self.health -= amount
+        print(self.health)
+        if self.health <= 0:
+            pygame.event.post(pygame.event.Event(PLAYER_DIED_EVENT))
+
+    def heal(self, amount):
+        self.health = min(self.BASE_HEALTH, self.health + amount)
+        print(self.health)

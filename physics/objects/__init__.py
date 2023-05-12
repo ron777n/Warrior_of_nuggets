@@ -3,7 +3,7 @@ pass
 """
 import abc
 import os
-from typing import Literal
+from typing import Literal, Optional
 
 import pygame
 import pymunk
@@ -45,6 +45,13 @@ class Solid(BaseObject, pymunk.Body):
         self._rect.center = self.position[0], self.position[1]
         return img
 
+    def hit_global(self, impulse_vector, global_position):
+        local_position = self.world_to_local(global_position)
+        self.hit_local(impulse_vector, local_position)
+
+    def hit_local(self, impulse_vector, local_position):
+        self.apply_impulse_at_local_point(impulse_vector, local_position)
+
 
 class Bullet(BaseObject):
     DE_SPAWN_TIMER = 10
@@ -66,8 +73,10 @@ class Bullet(BaseObject):
             return
         hit = got[0]
         self.end_pos = hit.point
-        hit_body = hit.shape.body
-        hit_body.apply_impulse_at_world_point(vector.scale_to_length(1000), self.end_pos)
+        hit_body: Optional[Solid] = hit.shape.body
+        if hit_body is None:
+            return
+        hit_body.hit_global(vector.scale_to_length(1000), self.end_pos)
         rect_location = min(self.end_pos[0], spawn[0]), min(self.end_pos[1], spawn[1])
         rect_size = (self.end_pos - spawn).int_tuple
         rect_size = abs(rect_size[0]), abs(rect_size[1])

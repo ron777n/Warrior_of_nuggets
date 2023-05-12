@@ -12,9 +12,10 @@ from Utils.camera import Camera
 class Item:
     image: pygame.Surface
 
-    def __init__(self, space: pymunk.Space, camera):
+    def __init__(self, space: pymunk.Space, camera, owner):
         self.space = space
         self.camera: Camera = camera
+        self.owner = owner
 
     def use_item(self, start_pos, end_pos, button: int, down: bool) -> bool:
         """

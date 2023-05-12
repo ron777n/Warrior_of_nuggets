@@ -8,6 +8,7 @@ import pymunk
 from pymunk import pygame_util
 
 import level
+from my_events import PLAYER_DIED_EVENT
 from Utils.Gui.Menus.EditorMenu import EditorTile
 from player import Player
 from settings import SCREEN_HEIGHT, SCREEN_WIDTH, TILE_SIZE
@@ -72,7 +73,10 @@ class Game:
             raise ValueError("Player location not found in level")
 
     def handle_event(self, event):
-        if event.type == pygame.KEYDOWN:
+        if event.type == PLAYER_DIED_EVENT:
+            raise KeyboardInterrupt()
+
+        elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_RETURN:
                 self.transition()
             elif event.key == pygame.K_EQUALS:
