@@ -49,8 +49,13 @@ class Camera:
     def clear(self, space: Optional[pymunk.Space] = None):
         if space is not None:
             for item in self.items:
-                space.remove(item, item.shape)
+                if isinstance(item, pymunk.Body):
+                    space.remove(item, item.shape)
         self.items.clear()
+
+    def remove(self, item: BaseObject):
+        if item in self.items:
+            self.items.remove(item)
 
     def append(self, *items: BaseObject):
         for item in items:

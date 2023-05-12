@@ -6,6 +6,7 @@ import pymunk
 
 from settings import SCREEN_HEIGHT, SCREEN_WIDTH
 from Utils import Gui
+from Utils.camera import Camera
 
 
 class Item:
@@ -13,7 +14,7 @@ class Item:
 
     def __init__(self, space: pymunk.Space, camera):
         self.space = space
-        self.camera = camera
+        self.camera: Camera = camera
 
     def use_item(self, start_pos, end_pos, button: int, down: bool) -> bool:
         """
