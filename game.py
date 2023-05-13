@@ -10,7 +10,7 @@ from pymunk import pygame_util
 import level
 from my_events import PLAYER_DIED_EVENT
 from Utils.Gui.Menus.EditorMenu import EditorTile
-from player import Player
+from Player import Player
 from settings import SCREEN_HEIGHT, SCREEN_WIDTH, TILE_SIZE
 from Utils.camera import Camera
 

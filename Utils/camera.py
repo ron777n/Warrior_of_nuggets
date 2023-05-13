@@ -90,7 +90,9 @@ class Camera:
         self.initial_time = pygame.time.get_ticks()
         self.initial_cam_size = self.cam_size
 
-    def get_mouse_pos(self, pos, global_pos=False) -> tuple[float, float]:
+    def get_mouse_pos(self, pos: Optional[tuple[float, float]] = None, global_pos=False) -> tuple[float, float]:
+        if pos is None:
+            pos = pygame.mouse.get_pos()
         x, y = pos
         offset_x, offset_y = self.tracker.rect.topleft
         x = (offset_x if global_pos else 0) + x * (self.cam_size[0] / self.original_cam_size[0])

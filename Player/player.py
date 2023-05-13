@@ -3,7 +3,7 @@ from typing import Optional
 import pygame
 import pymunk
 
-from Inventory import *
+from .Inventory import *
 from my_events import PLAYER_DIED_EVENT
 from physics.objects import Solid
 from settings import SCREEN_HEIGHT, SCREEN_WIDTH
@@ -31,12 +31,15 @@ class Player(Solid):
         self.dash_timer = Timer(self.DASH_COOL_DOWN)
         self.velocity_func = self.velocity_function
         self.position_func = self.position_function
-        self.camera = camera
         self.health = self.BASE_HEALTH
 
+        # camera
+        self.camera = camera
         if camera is not None:
             camera.tracker = Tracker(self._rect, pygame.Rect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT))
+        self.looking_angle = 0
 
+        # inventory
         self.inventory_active = False
         self.inventory = Inventory()
         self.inventory.add_item(ShotGun(self.space, self.camera, self))
@@ -88,9 +91,9 @@ class Player(Solid):
 
     def set_speed(self, speed: tuple[Optional[int], Optional[int]]):
         if speed[0] is not None:
-            self.apply_impulse_at_local_point((-self.mass * self.velocity.x + self.mass * speed[0], 0), (0, 0))
+            self.apply_impulse_at_local_point((-self.mass * self.velocity.x + self.mass * speed[0], 0), (0, 0), True)
         if speed[1] is not None:
-            self.apply_impulse_at_local_point((0, -self.mass * self.velocity.y + self.mass * speed[1]), (0, 0))
+            self.apply_impulse_at_local_point((0, -self.mass * self.velocity.y + self.mass * speed[1]), (0, 0), True)
 
     def dash(self):
         self.dash_timer.reset()
@@ -98,6 +101,10 @@ class Player(Solid):
         self.moving = 0
 
     def update(self):
+        if self.camera:
+            mouse_pos = pymunk.Vec2d(*self.camera.get_mouse_pos())
+            diff_vector = mouse_pos - (SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
+            self.looking_angle = -int(diff_vector.angle_degrees)
         if self.moving:
             self.set_speed((self.moving * self.PLAYER_SPEED, None))
 
@@ -107,11 +114,13 @@ class Player(Solid):
         img = self.image_.copy()
         return img
 
-    def hit_local(self, impulse_vector: pymunk.Vec2d, local_position):
-        super().hit_local(impulse_vector, local_position)
-        power = abs(impulse_vector)
-        if power > 100:
-            self.damage(power / 100)
+    def apply_impulse_at_local_point(self, impulse, point=(0, 0), inside=False):
+        super().apply_impulse_at_local_point(impulse, point)
+        if inside:
+            return
+        power = abs(pymunk.Vec2d(*impulse))
+        if power > 1000:
+            self.damage(power / 1000)
 
     def damage(self, amount):
         self.health -= amount
