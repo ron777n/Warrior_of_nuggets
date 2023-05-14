@@ -12,6 +12,15 @@ from Utils.Timers import Timer
 from Utils.trackers import Tracker
 
 
+def player_body() -> pymunk.Shape:
+    img = pygame.image.load("sprites/Player/Player.png")
+    shape: pygame.Poly = pymunk.Poly.create_box(None, (100, 180))
+    shape.base_image = img
+    shape.mass = 100
+    shape.friction = 0.7
+    return shape
+
+
 class Player(Solid):
     PLAYER_SPEED = 17
     DASH_COOL_DOWN = 700
@@ -20,10 +29,7 @@ class Player(Solid):
     BASE_HEALTH = 100
 
     def __init__(self, space, pos, *, camera: Optional[Camera] = None):
-        self.image_ = pygame.transform.scale(pygame.image.load("sprites/Player/Player.png"), (100, 200))
-        rect: pygame.Rect = pygame.Rect(pos, (100, 180))
-        super().__init__(space, rect, mass=10, body_type="DYNAMIC")
-        self.position = pymunk.vec2d.Vec2d(self.rect.centerx, self.rect.top)
+        super().__init__(space, pos, player_body(), body_type_name="DYNAMIC")
 
         self.jump = False
         self.moving = 0
@@ -34,10 +40,12 @@ class Player(Solid):
         self.health = self.BASE_HEALTH
 
         # camera
+        self._rect = self.rect
         self.camera = camera
         if camera is not None:
             camera.tracker = Tracker(self._rect, pygame.Rect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT))
         self.looking_angle = 0
+        self.camera.append(self)
 
         # inventory
         self.inventory_active = False
@@ -60,7 +68,6 @@ class Player(Solid):
     def position_function(body: 'Player', dt):
         pymunk.Body.update_position(body, dt)
         body.angle = 0
-        body.angular_velocity = 0.0
 
     def handle_event(self, event: pygame.event.Event):
         if event.type == pygame.KEYDOWN:
@@ -102,17 +109,12 @@ class Player(Solid):
 
     def update(self):
         if self.camera:
+            self._rect.update(self.rect)
             mouse_pos = pymunk.Vec2d(*self.camera.get_mouse_pos())
             diff_vector = mouse_pos - (SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
             self.looking_angle = -int(diff_vector.angle_degrees)
         if self.moving:
             self.set_speed((self.moving * self.PLAYER_SPEED, None))
-
-    @property
-    def image(self) -> pygame.Surface:
-        self._rect.center = self.position
-        img = self.image_.copy()
-        return img
 
     def apply_impulse_at_local_point(self, impulse, point=(0, 0), inside=False):
         super().apply_impulse_at_local_point(impulse, point)

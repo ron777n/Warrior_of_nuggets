@@ -2,8 +2,7 @@
 pass
 """
 import abc
-import os
-from typing import Literal, Optional
+from typing import Optional
 
 import pygame
 import pymunk
@@ -16,33 +15,69 @@ class BaseObject(abc.ABC):
     image: pygame.Surface
 
 
+def shape_rect(self: pymunk.Shape) -> pygame.rect.Rect:
+    left, bottom, right, top = self.cache_bb()
+    size = right - left, top - bottom
+    rect = pygame.rect.Rect((left, top - size[1]), size)
+    return rect
+
+
+def shape_image(self: pymunk.Shape) -> pygame.Surface:
+    img = self.base_image.copy()
+    return img
+
+
+pymunk.Shape.rect = property(shape_rect)
+pymunk.Shape.image = property(shape_image)
+
+DEFAULT_BLOCK_PATH = "sprites/objects/block.png"
+
+
+def block(body, size, *, mass: int = 100, friction: float = 0.95,
+          elasticity: float = 0.0, image: pygame.Surface = pygame.image.load(DEFAULT_BLOCK_PATH)) -> any:
+    shape: pygame.Poly = pymunk.Poly.create_box(body, size)
+    setattr(shape, "base_image", pygame.transform.scale(image, size))
+    shape.mass = mass
+    shape.friction = friction
+    shape.elasticity = elasticity
+
+    return shape
+
+
 class Solid(BaseObject, pymunk.Body):
     base_image: pygame.surface.Surface = pygame.image.load("sprites/objects/block.png")
 
-    def __init__(self, space, rect: pygame.rect.Rect, *, mass: int = 100,
-                 body_type: Literal["DYNAMIC", "STATIC"] = "STATIC", friction: float = 0.95,
-                 image_path: os.PathLike = "sprites/objects/block.png"):
-        body_type = getattr(pymunk.Body, body_type)
-        super().__init__(mass=mass, body_type=body_type)
-        self.shape = pymunk.Poly.create_box(self, size=rect.size)
-        self.shape.mass = mass
-        self.shape.friction = friction
-        self.position = pymunk.vec2d.Vec2d(*rect.center)
-        self._rect = rect
-        self.original_size = rect.size
-        space.add(self, self.shape)
-        self.base_image = pygame.image.load(image_path)
+    def __init__(self, space: pymunk.Space, position,
+                 *shapes, body_type_name: str = "STATIC", mass=0, moment=0):
+        body_type: int = getattr(pymunk.Body, body_type_name)
+        super().__init__(body_type=body_type, mass=mass, moment=moment)
+
+        for shape in shapes:
+            shape.body = self
+
+        self.position = pymunk.vec2d.Vec2d(*position)
+        space.add(self, *self.shapes)
 
     @property
     def rect(self) -> pygame.rect.Rect:
-        return self._rect.copy()
+        inf = float("inf")
+        top, left, bottom, right = inf, inf, -inf, -inf
+        for shape in self.shapes:
+            current_shape_rect = shape.rect
+            top = min(top, current_shape_rect.top)
+            left = min(left, current_shape_rect.left)
+            bottom = max(bottom, current_shape_rect.bottom)
+            right = max(right, current_shape_rect.right)
+        rect = pygame.rect.Rect(left, top, right - left, bottom - top)
+        # print(self.shapes, current_shape_rect, rect)
+        return rect
 
     @property
     def image(self):
-        img = pygame.transform.scale(self.base_image.copy(), (self.original_size[0], self.original_size[1]))
-        img = pygame.transform.rotate(img, int(-self.rotation_vector.angle_degrees))
-        self._rect.size = img.get_size()
-        self._rect.center = self.position[0], self.position[1]
+        rect = self.rect
+        img = pygame.Surface(rect.size, pygame.SRCALPHA)
+        for shape in self.shapes:
+            img.blit(shape.image, shape.rect.topleft - pymunk.Vec2d(*rect.topleft))
         return img
 
     def hit_global(self, impulse_vector, global_position):

@@ -5,11 +5,12 @@ import typing
 from collections.abc import Iterable
 
 import pygame.display
+import pymunk
 
-from physics.objects import BaseObject, Solid
+from physics.objects import BaseObject, DEFAULT_BLOCK_PATH, Solid
 from settings import *
 from Utils import Gui
-from Utils.Gui import FileSetting, NumberSetting, OptionSettings, Text
+from Utils.Gui import ImageSetting, NumberSetting, OptionSettings, Text
 
 margin = 0
 width = 192
@@ -23,7 +24,7 @@ class EditorMenu(Gui.Menu):
     The menu class for the editor
     """
 
-    def __init__(self, set_functions: tuple[callable, ...], *classes: type[BaseObject]):
+    def __init__(self, set_functions: tuple[callable, ...], *shapes: type[pymunk.Shape]):
         self.selected_block = None
         self.buttons: dict[Gui.BaseGui, tuple[type, dict]] = {}  # Button: data
         self.objects = []
@@ -49,33 +50,46 @@ class EditorMenu(Gui.Menu):
         self.start_button = set_functions[3]
         self.save_level = set_functions[4]
 
-        self.create_buttons(classes)
+        self.create_buttons(shapes)
 
-    def add_button(self, class_type, values, img):
+    def add_button(self, shape_constructor, values):
         rect = pygame.rect.Rect(
             self.scroll_rect.left + self.box_size * (self.buttons_i % self.columns),
             self.scroll_rect.top + self.box_size * (self.buttons_i // self.columns),
             self.box_size,
             self.box_size
         )
-        annotations = class_type.__init__.__annotations__
-        for key, value in class_type.__init__.__kwdefaults__.items():
+        annotations = shape_constructor.__annotations__
+        for key, value in shape_constructor.__kwdefaults__.items():
             if key in annotations:
+                annotation = annotations[key]
+                annotation = annotation.__name__
+                if key == "image":
+                    value = (value, DEFAULT_BLOCK_PATH)
                 if key in values:
                     value = values[key]
-                annotation = annotations[key]
-                if typing.get_origin(annotation) == typing.Literal:
-                    annotation = typing.get_args(annotation)
-                else:
-                    annotation = annotation.__name__
+
                 values[key] = (value, annotation)
 
+        img = values["image"][0][0]
+
         button_1 = Gui.Button(rect.inflate(-self.button_margin, -self.button_margin),
-                              lambda: self.create_block(class_type, values), image=img)
+                              lambda: self.create_block(shape_constructor, values), image=img)
         for button, (block_type, data) in self.buttons.items():
-            if block_type == class_type and values == data:
-                return
-        self.buttons[button_1] = (class_type, values)
+            if block_type == shape_constructor:
+                for key in values:
+                    if key == "image":
+                        if data[key][0][1] != values[key][0][1]:
+                            break
+                        continue
+                    if key not in data:
+                        return
+                    if data[key][0] != values[key][0]:
+                        break
+                else:
+                    return
+                continue
+        self.buttons[button_1] = (shape_constructor, values)
         self.buttons_i += 1
 
     def add_object(self, func: (callable, Iterable, dict), image_path):
@@ -92,7 +106,7 @@ class EditorMenu(Gui.Menu):
         self.objects.append(button_1)
         self.object_i += 1
 
-    def create_buttons(self, classes):
+    def create_buttons(self, shapes):
         """
         just creates all the buttons
         """
@@ -104,8 +118,8 @@ class EditorMenu(Gui.Menu):
 
         self.add_object((self.save_level, (), {},), "sprites/Gui/Buttons/ButtonSave.png")
 
-        for i, class_type in enumerate(classes, start=1):
-            self.add_button(class_type, {}, class_type.base_image)
+        for i, shape_constructor in enumerate(shapes, start=1):
+            self.add_button(shape_constructor, {})
 
     def display(self, display_surface):
         """
@@ -136,7 +150,7 @@ class EditorMenu(Gui.Menu):
     def get_buttons(self) -> list:
         to_ret = []
         for block, data in self.buttons.values():
-            to_ret.append((block.__name__, data))
+            to_ret.append((block.__name__, {key: (val if key != "image" else (val[0][1], *val[1:])) for key, val in data.items()}))
         return to_ret
 
 
@@ -152,14 +166,14 @@ class EditorTile:
             if isinstance(possible_values, str):
                 if possible_values == "int":
                     data_swap = NumberSetting
-                elif possible_values == "PathLike":
-                    data_swap = FileSetting
-                else:
-                    continue
+                elif possible_values == "Surface":
+                    data_swap = ImageSetting
+                # else:
+                #     continue
             elif isinstance(possible_values, Iterable):
                 data_swap = OptionSettings
-            if data_swap is not None:
-                block_data[key] = [value, possible_values, data_swap]
+            # if data_swap is not None:
+            block_data[key] = [value, possible_values, data_swap]
         self.main_block: tuple[type(Solid), tuple, dict[any, list[any, any, any]]] = \
             (selection[0], selection[1], block_data)
 
@@ -169,11 +183,12 @@ class EditorTile:
     def json(self):
         return (self.main_block[0].__name__,
                 list(self.main_block[1]),
-                {name: [values[0], values[1]] for name, values in self.main_block[2].items()})
+                {name: [(values[0] if name != "image" else values[0][1]), values[1]] for name, values in
+                 self.main_block[2].items() if not isinstance(values[0], pygame.Surface)})
 
     @property
     def image(self) -> pygame.surface.Surface:
-        return self.main_block[0].base_image
+        return self.main_block[2]["image"][0][0]
 
 
 class TileMenu(Gui.Menu):
@@ -209,8 +224,7 @@ class TileMenu(Gui.Menu):
         data = {}
         for key, item in self.data[1].items():
             data[key] = item[0]
-
-        self.save_block(self.data[0], data, self.data[0].base_image)
+        self.save_block(self.data[0], data)
 
     def reset(self, tile: EditorTile):
         self.active = True
@@ -229,6 +243,8 @@ class TileMenu(Gui.Menu):
         self.buttons.append(save_btn)
         self.add_location += self.rect.width / 2
         for name, connection in tile.main_block[2].items():
+            if connection[2] is None:
+                continue
             self.add_setting(connection)
 
     def display(self, display_surface: pygame.surface.Surface):

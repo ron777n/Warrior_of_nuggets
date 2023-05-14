@@ -95,29 +95,28 @@ class OptionSettings(BaseSetting):
         return collided
 
 
-class FileSetting(BaseSetting):
+class ImageSetting(BaseSetting):
     scale = 0.3
 
     def __init__(self, rect: pygame.Rect, connection, background=pygame.Surface((50, 50))):
         super().__init__(rect, connection)
         self.background_image = pygame.transform.scale(background, rect.size)
         self.connection = connection
-        self.base_button_image = pygame.transform.scale(pygame.image.load("sprites/Gui/Button.png"), self.rect.size)
+        self.base_button_image = pygame.Surface(self.rect.size, pygame.SRCALPHA)
         self.button = Button(rect, self.set_file, self.base_button_image)
-        self.update_button_image(self.connection[0])
+        self.update_button_image()
 
-    def update_button_image(self, path: str):
+    def update_button_image(self):
         img = self.base_button_image.copy()
-        text = Text(path[path.rfind("/") + 1:])
-        text.draw(img)
+        img.blit(pygame.transform.scale(self.connection[0][0], self.rect.size), (0, 0))
         self.button.base_image = img
 
     def set_file(self):
         path = filedialog.askopenfilename()
         if not path:
             return
-        self.update_button_image(path)
-        self.connection[0] = path
+        self.connection[0] = pygame.image.load(path), path
+        self.update_button_image()
 
     def click(self, location: tuple[int, int], button_type: int, down: bool) -> bool:
         collided = self.rect.collidepoint(location)

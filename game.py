@@ -9,6 +9,7 @@ from pymunk import pygame_util
 
 import level
 from my_events import PLAYER_DIED_EVENT
+from physics.objects import Solid
 from Utils.Gui.Menus.EditorMenu import EditorTile
 from Player import Player
 from settings import SCREEN_HEIGHT, SCREEN_WIDTH, TILE_SIZE
@@ -49,6 +50,7 @@ class Game:
         self.player.update()
         self.camera.update()
         self.camera.display()
+        # self.space.debug_draw(self.debug_options)
         self.display_menus()
         self.space.step(dt)
 
@@ -56,18 +58,20 @@ class Game:
         tile: EditorTile
         player = False
         for location, tile in data.items():
-            rect = pygame.Rect((location[0], location[1]), (TILE_SIZE, TILE_SIZE))
             if isinstance(tile, str):
                 if tile == "player":
                     self.player: Player = Player(self.space, location, camera=self.camera)
                     player = True
-                    self.camera.append(self.player)
                 continue
-            self.camera.append(
-                tile.main_block[0](
-                    self.space, rect,
-                    *tile.main_block[1], **{name: val for name, (val, _, _) in tile.main_block[2].items()}
+            shape = tile.main_block[0](
+                    None, (TILE_SIZE, TILE_SIZE),
+                    *tile.main_block[1], **{name: (val if name != "image" else val[0]) for name, (val, _, _) in
+                                            tile.main_block[2].items()}
                 )
+
+            body = Solid(self.space, location, shape)
+            self.camera.append(
+                body
             )
         if not player:
             raise ValueError("Player location not found in level")

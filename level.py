@@ -4,8 +4,10 @@ The level
 import json
 import os
 
+import pygame
+
 from Utils.Gui.Menus import EditorMenu
-from physics.objects import Solid
+from physics.objects import block
 from settings import TILE_SIZE
 
 
@@ -17,7 +19,6 @@ def save(filename, blocks_data, buttons_data):
             blocks_json[str(location)] = data.json
         else:
             blocks_json[str(location)] = data
-
     save_json = {"Level": blocks_json, "Editor": buttons_data}
 
     with open(filename, "w") as file:
@@ -44,8 +45,8 @@ def load(filename, editor=False) -> dict:
         if isinstance(data, str):
             canvas_data[location_tuple] = "player"
             continue
-        if data[0] == "Solid":
-            block = Solid
+        if data[0] == "block":
+            shape = block
         else:
             continue
 
@@ -55,11 +56,21 @@ def load(filename, editor=False) -> dict:
 
         for key, (value, possible_values) in data[2].items():
             kwargs[key] = (value, possible_values)
+            if key == "image":
+                kwargs["image"] = (pygame.image.load(value), value), possible_values
 
         canvas_data[location_tuple] = \
-            EditorMenu.EditorTile((block, params, kwargs))
+            EditorMenu.EditorTile((shape, params, kwargs))
 
     if editor:
-        canvas_data = {"Level": canvas_data, "Editor": loaded["Editor"]}
+        editor_data = []
+        for shape, data in loaded["Editor"]:
+            shape_data = {}
+            for key, val in data.items():
+                if key == "image":
+                    val = ((pygame.image.load(val[0]), val[0]), val[1])
+                shape_data[key] = val
+            editor_data.append((shape, shape_data))
+        canvas_data = {"Level": canvas_data, "Editor": editor_data}
 
     return canvas_data

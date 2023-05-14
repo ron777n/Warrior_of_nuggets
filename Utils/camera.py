@@ -50,7 +50,7 @@ class Camera:
         if space is not None:
             for item in self.items:
                 if isinstance(item, pymunk.Body):
-                    space.remove(item, item.shape)
+                    space.remove(item, *item.shapes)
         self.items.clear()
 
     def remove(self, item: BaseObject):
@@ -79,10 +79,6 @@ class Camera:
             else:
                 offset_pos = item.rect.topleft
             img.blit(item.image, offset_pos)
-        red = pygame.Surface((64, 64))
-        red.fill("red")
-        # print(self.tracker.rect)
-        img.blit(red, self.tracker.rect)
         return img
 
     def zoom(self, value):
