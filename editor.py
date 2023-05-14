@@ -205,8 +205,6 @@ class Editor:
                 continue
             worked_button_data = {}
             for key, val in old_button_data.items():
-                # if key == "image":
-                #     worked_button_data[key] = val[0]
-                # else:
                 worked_button_data[key] = val[0]
+            print(worked_button_data)
             self.menu.add_button(class_type, worked_button_data)

@@ -66,10 +66,10 @@ class Game:
             shape = tile.main_block[0](
                     None, (TILE_SIZE, TILE_SIZE),
                     *tile.main_block[1], **{name: (val if name != "image" else val[0]) for name, (val, _, _) in
-                                            tile.main_block[2].items()}
+                                            tile.main_block[2].items() if name != "body_type"}
                 )
 
-            body = Solid(self.space, location, shape)
+            body = Solid(self.space, location, shape, body_type_name=tile.main_block[2]["body_type"][0])
             self.camera.append(
                 body
             )

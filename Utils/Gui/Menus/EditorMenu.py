@@ -71,6 +71,11 @@ class EditorMenu(Gui.Menu):
 
                 values[key] = (value, annotation)
 
+        if "body_type" not in values:
+            values["body_type"] = ("DYNAMIC", ("DYNAMIC", "STATIC"))
+        else:
+            values["body_type"] = (values["body_type"], ("DYNAMIC", "STATIC"))
+
         img = values["image"][0][0]
 
         button_1 = Gui.Button(rect.inflate(-self.button_margin, -self.button_margin),
