@@ -22,15 +22,17 @@ class BaseSetting(BaseGui):
 
 
 class NumberSetting(BaseSetting):
-    scale = 0.2
+    scale = 0.35
 
     def __init__(self, rect: pygame.Rect, connection: list):
         super().__init__(rect, connection)
         self.buttons_diff = self.rect.size[0] // 3
         button_rect = pygame.Rect(self.rect.topleft, (self.buttons_diff, self.rect.size[1]))
         button_rect = button_rect.inflate(-margin, -margin)
-        self.reduce_button = Button(button_rect, lambda: self.add_to_val(-5))
-        self.add_button = Button(button_rect.move((self.buttons_diff * 2, 0)), lambda: self.add_to_val(5))
+        self.reduce_button = Button(button_rect, lambda: self.add_to_val(-5),
+                                    pygame.image.load("sprites/Gui/Buttons/ButtonMinus.png"))
+        self.add_button = Button(button_rect.move((self.buttons_diff * 2, 0)), lambda: self.add_to_val(5),
+                                 pygame.image.load("sprites/Gui/Buttons/ButtonPlus.png"))
 
     def add_to_val(self, increment):
         self.connection[0] += increment
@@ -96,7 +98,7 @@ class OptionSettings(BaseSetting):
 
 
 class ImageSetting(BaseSetting):
-    scale = 0.3
+    scale = 1
 
     def __init__(self, rect: pygame.Rect, connection, background=pygame.Surface((50, 50))):
         super().__init__(rect, connection)
