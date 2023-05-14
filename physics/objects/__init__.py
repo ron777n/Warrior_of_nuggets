@@ -24,6 +24,7 @@ def shape_rect(self: pymunk.Shape) -> pygame.rect.Rect:
 
 def shape_image(self: pymunk.Shape) -> pygame.Surface:
     img = self.base_image.copy()
+    img = pygame.transform.rotate(img, -self.body.rotation_vector.angle_degrees)
     return img
 
 
