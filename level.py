@@ -7,7 +7,7 @@ import os
 import pygame
 
 from Utils.Gui.Menus import EditorMenu
-from physics.objects import block
+from physics.objects import block_shape
 from settings import TILE_SIZE
 
 
@@ -45,8 +45,8 @@ def load(filename, editor=False) -> dict:
         if isinstance(data, str):
             canvas_data[location_tuple] = "player"
             continue
-        if data[0] == "block":
-            shape = block
+        if data[0] == "block_shape":
+            shape = block_shape
         else:
             continue
 

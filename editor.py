@@ -8,7 +8,7 @@ import pygame
 
 import level
 from Utils.Gui.Menus import EditorMenu
-from physics.objects import BaseObject, block, Solid
+from physics.objects import BaseObject, block_shape
 from settings import *
 from Utils.camera import Camera
 
@@ -50,7 +50,7 @@ class Editor:
         self.canvas_data: dict[tuple[int, int], Union[EditorMenu.EditorTile, str]] = {}
 
         self.menu = EditorMenu.EditorMenu(
-            (self.set_block, self.set_player, self.delete_block, self.start, self.save_level), block)
+            (self.set_block, self.set_player, self.delete_block, self.start, self.save_level), block_shape)
         self.settings = EditorMenu.TileMenu(self.menu.add_button)
         self.load_level()
 
@@ -200,7 +200,7 @@ class Editor:
         self.update_camera()
         for shape, old_button_data in data["Editor"]:
             if shape == "block":
-                class_type = block
+                class_type = block_shape
             else:
                 continue
             worked_button_data = {}
