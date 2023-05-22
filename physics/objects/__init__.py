@@ -35,27 +35,26 @@ DEFAULT_BLOCK_PATH = "sprites/objects/block.png"
 
 
 def block(body, size, *, mass: int = 100, friction: float = 0.95,
-          elasticity: float = 0.0, image: pygame.Surface = pygame.image.load(DEFAULT_BLOCK_PATH)) -> any:
+          elasticity: float = 0.0) -> any:
     shape: pygame.Poly = pymunk.Poly.create_box(body, size)
-    setattr(shape, "base_image", pygame.transform.scale(image, size))
     shape.mass = mass
     shape.friction = friction
     shape.elasticity = elasticity
-
     return shape
 
 
 class Solid(BaseObject, pymunk.Body):
-    base_image: pygame.surface.Surface = pygame.image.load("sprites/objects/block.png")
+    base_image: pygame.surface.Surface
 
     def __init__(self, space: pymunk.Space, position,
-                 *shapes, body_type_name: str = "STATIC", mass=0, moment=0):
+                 *shapes, body_type_name: str = "STATIC", mass=0, moment=0, image_path=DEFAULT_BLOCK_PATH):
         body_type: int = getattr(pymunk.Body, body_type_name)
         super().__init__(body_type=body_type, mass=mass, moment=moment)
 
         for shape in shapes:
             shape.body = self
 
+        self.base_image: pygame.Surface = pygame.transform.scale(pygame.image.load(image_path), self.rect.size)
         self.position = pymunk.vec2d.Vec2d(*position)
         space.add(self, *self.shapes)
 
@@ -70,15 +69,15 @@ class Solid(BaseObject, pymunk.Body):
             bottom = max(bottom, current_shape_rect.bottom)
             right = max(right, current_shape_rect.right)
         rect = pygame.rect.Rect(left, top, right - left, bottom - top)
-        # print(self.shapes, current_shape_rect, rect)
         return rect
 
     @property
     def image(self):
-        rect = self.rect
-        img = pygame.Surface(rect.size, pygame.SRCALPHA)
-        for shape in self.shapes:
-            img.blit(shape.image, shape.rect.topleft - pymunk.Vec2d(*rect.topleft))
+        # rect = self.rect
+        # img = pygame.Surface(rect.size, pygame.SRCALPHA)
+        img = self.base_image.copy()
+        # for shape in self.shapes:
+        #     img.blit(shape.image, shape.rect.topleft - pymunk.Vec2d(*rect.topleft))
         return img
 
     def hit_global(self, impulse_vector, global_position):

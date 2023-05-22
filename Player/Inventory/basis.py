@@ -15,6 +15,7 @@ class Item:
         self.space = space
         self.camera: Camera = camera
         self.owner = owner
+        self.hand_vec = pymunk.Vec2d(1, 1)
 
     def use_item(self, start_pos, end_pos, button: int, down: bool) -> bool:
         """

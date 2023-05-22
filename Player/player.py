@@ -13,12 +13,23 @@ from Utils.trackers import Tracker
 
 
 def player_body() -> pymunk.Shape:
-    img = pygame.image.load("sprites/Player/Player.png")
     shape: pygame.Poly = pymunk.Poly.create_box(None, (100, 180))
-    shape.base_image = img
     shape.mass = 100
     shape.friction = 0.7
     return shape
+
+
+class PlayerHand:
+    def __init__(self, left):
+        self.base_image = pygame.image.load("sprites/Player/Hand" + ("Left" if left else "Right") + ".png")
+
+    def get_display(self, angle_vector) -> tuple[pygame.Rect, pygame.Surface]:
+        img = self.base_image.copy()
+        img = pygame.transform.rotate(img, -angle_vector.angle_degrees)
+        # if abs(angle_vector.angle_degrees) > 90:
+        #     img = pygame.transform.flip(img, True, True)
+        rect = img.get_rect()
+        return rect, img
 
 
 class Player(Solid):
@@ -29,7 +40,9 @@ class Player(Solid):
     BASE_HEALTH = 100
 
     def __init__(self, space, pos, *, camera: Optional[Camera] = None):
-        super().__init__(space, pos, player_body(), body_type_name="DYNAMIC")
+        super().__init__(space, pos, player_body(), body_type_name="DYNAMIC", image_path="sprites/Player/Player.png")
+        self.hand_left = PlayerHand(True)
+        self.hand_right = PlayerHand(True)
 
         self.jump = False
         self.moving = 0
@@ -56,6 +69,21 @@ class Player(Solid):
         self.inventory.add_item(Nugget(self.space, self.camera, self))
         self.inventory.add_item(Knife(self.space, self.camera, self))
         self.inventory.add_item(Nugget(self.space, self.camera, self))
+
+    @property
+    def image(self):
+        img = super().image
+        pos = pymunk.Vec2d(*self.camera.get_mouse_pos(mid=True))
+        right_rect, right_image = self.hand_right.get_display(pos.normalized())
+        left_rect, left_image = self.hand_left.get_display(pos.normalized())
+        if abs(pos.angle_degrees) > 90:
+            img = pygame.transform.flip(img, True, False)
+            img.blit(left_image, (self.rect.width / 2 - 10 - left_rect.width, 40))
+            img.blit(right_image, (self.rect.width / 2 + 10, 40))
+        else:
+            img.blit(right_image, (self.rect.width / 2 + 10, 40))
+            img.blit(left_image, (self.rect.width / 2 - 10 - left_rect.width, 40))
+        return img
 
     @staticmethod
     def velocity_function(body: 'Player', gravity, damping, dt):

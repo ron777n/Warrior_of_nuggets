@@ -59,6 +59,7 @@ class EditorMenu(Gui.Menu):
             self.box_size,
             self.box_size
         )
+
         annotations = shape_constructor.__annotations__
         for key, value in shape_constructor.__kwdefaults__.items():
             if key in annotations:
@@ -75,6 +76,10 @@ class EditorMenu(Gui.Menu):
             values["body_type"] = ("DYNAMIC", ("DYNAMIC", "STATIC"))
         else:
             values["body_type"] = (values["body_type"], ("DYNAMIC", "STATIC"))
+        if "image" not in values:
+            values["image"] = (pygame.image.load(DEFAULT_BLOCK_PATH), DEFAULT_BLOCK_PATH), "Surface"
+        else:
+            values["image"] = values["image"], "Surface"
 
         img = values["image"][0][0]
 
