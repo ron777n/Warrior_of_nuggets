@@ -8,6 +8,9 @@ class BaseObject(abc.ABC):
     rect: pygame.Rect
     image: pygame.Surface
 
+    def update(self):
+        pass
+
 
 def shape_rect(self: pymunk.Shape) -> pygame.rect.Rect:
     left, bottom, right, top = self.cache_bb()

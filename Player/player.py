@@ -74,6 +74,7 @@ class Player(Solid):
     def image(self):
         img = super().image
         pos = pymunk.Vec2d(*self.camera.get_mouse_pos(mid=True))
+        pos += 0, 60
         right_rect, right_image = self.hand_right.get_display(pos.normalized())
         left_rect, left_image = self.hand_left.get_display(pos.normalized())
         if abs(pos.angle_degrees) > 90:
@@ -126,9 +127,9 @@ class Player(Solid):
 
     def set_speed(self, speed: tuple[Optional[int], Optional[int]]):
         if speed[0] is not None:
-            self.apply_impulse_at_local_point((-self.mass * self.velocity.x + self.mass * speed[0], 0), (0, 0), True)
+            self.hit_local((-self.mass * self.velocity.x + self.mass * speed[0], 0), (0, 0), False)
         if speed[1] is not None:
-            self.apply_impulse_at_local_point((0, -self.mass * self.velocity.y + self.mass * speed[1]), (0, 0), True)
+            self.hit_local((0, -self.mass * self.velocity.y + self.mass * speed[1]), (0, 0), False)
 
     def dash(self):
         self.dash_timer.reset()
@@ -136,6 +137,7 @@ class Player(Solid):
         self.moving = 0
 
     def update(self):
+        super().update()
         if self.camera:
             self._rect.update(self.rect)
             mouse_pos = pymunk.Vec2d(*self.camera.get_mouse_pos())
@@ -144,15 +146,7 @@ class Player(Solid):
         if self.moving:
             self.set_speed((self.moving * self.PLAYER_SPEED, None))
 
-    def apply_impulse_at_local_point(self, impulse, point=(0, 0), inside=False):
-        super().apply_impulse_at_local_point(impulse, point)
-        if inside:
-            return
-        power = abs(pymunk.Vec2d(*impulse))
-        if power > 1000:
-            self.damage(power / 1000)
-
-    def damage(self, amount):
+    def damage_local(self, amount, location_):
         self.health -= amount
         print(self.health)
         if self.health <= 0:

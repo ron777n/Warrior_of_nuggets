@@ -73,6 +73,7 @@ class Camera:
                     img.blit(self.background, (col, row))
 
         for item in self.items:
+            item.update()
             if self.tracker is not None:
                 a, b = item.rect.topleft, self.tracker.rect.topleft
                 offset_pos = a[0] - b[0], a[1] - b[1]
