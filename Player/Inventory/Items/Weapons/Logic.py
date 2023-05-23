@@ -3,7 +3,7 @@ from typing import Optional
 import pygame
 import pymunk
 
-from physics.objects import BaseObject, ray_trace, Solid
+from physics.objects import BaseObject, ray_trace, ray_trace_first, Solid
 from Utils.Timers import Timer
 
 
@@ -14,13 +14,10 @@ class Bullet(BaseObject):
         vector = pymunk.Vec2d(1, 0).rotated_degrees(angle)
         got = ray_trace(space, spawn, vector)
         self.start_pos = spawn
-        hit: pymunk.SegmentQueryInfo
 
-        for hit in got:
-            if hit.shape.body == source:
-                continue
-            break
-        else:
+        hit: pymunk.SegmentQueryInfo
+        hit = ray_trace_first(space, spawn, vector, source)
+        if hit is None:
             self.end_pos = spawn + vector.scale_to_length(1000)
             self.rect = self.create_camera_rect(spawn, self.end_pos)
 
@@ -28,8 +25,8 @@ class Bullet(BaseObject):
             self.camera.append(self)
             self.death_timer = Timer(self.DE_SPAWN_TIMER)
             return
+        hit_body = hit.shape.body
         self.end_pos = hit.point
-        hit_body: Optional[Solid] = hit.shape.body
         if hit_body is None:
             return
         hit_body.hit_global(vector.scale_to_length(1000), self.end_pos)
