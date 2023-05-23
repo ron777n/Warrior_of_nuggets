@@ -113,6 +113,8 @@ class Player(Solid):
                 self.set_speed((None, -40))
             elif event.key == pygame.K_TAB:
                 self.inventory_active = not self.inventory_active
+            elif event.key == pygame.K_e:
+                print("GRAB HIM")
         elif event.type == pygame.KEYUP:
             if event.key == pygame.K_d and self.moving == 1:
                 self.moving = 0
