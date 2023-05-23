@@ -20,11 +20,9 @@ def ray_trace_first(space, spawn, angle, target_filter) -> Optional[pymunk.Segme
         target = target_filter
         target_filter = pymunk.ShapeFilter()
     got = ray_trace(space, spawn, angle, target_filter)
-    hit = None
     for hit in got:
         if hit.shape.body is target:
             continue
-        break
+        return hit
     else:
         return None
-    return hit

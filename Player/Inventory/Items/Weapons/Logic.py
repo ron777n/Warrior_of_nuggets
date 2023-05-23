@@ -12,7 +12,6 @@ class Bullet(BaseObject):
 
     def __init__(self, source, camera, space, spawn, angle, effect=None):
         vector = pymunk.Vec2d(1, 0).rotated_degrees(angle)
-        got = ray_trace(space, spawn, vector)
         self.start_pos = spawn
 
         hit: pymunk.SegmentQueryInfo
