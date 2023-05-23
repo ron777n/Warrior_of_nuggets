@@ -47,8 +47,7 @@ class Game:
 
     def run(self, dt):
         self.event_loop()
-        self.player.update()
-        self.camera.update()
+        self.camera.update(dt)
         self.camera.display()
         # self.space.debug_draw(self.debug_options)
         self.display_menus()

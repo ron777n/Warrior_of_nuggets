@@ -26,9 +26,18 @@ class Solid(BaseObject, pymunk.Body):
         self.position = pymunk.vec2d.Vec2d(*position)
         space.add(self, *self.shapes)
 
-    def update(self):
-        for effect in self.effects:
-            effect.effect(self)
+    def update(self, dt):
+        for effect in self.effects.copy():
+            if not effect.effect(self, dt):
+                self.effects.remove(effect)
+
+    def add_effect(self, effect):
+        for effect_ in self.effects:
+            if effect == effect_:
+                effect_.timer.reset()
+                break
+        else:
+            self.effects.add(effect)
 
     @property
     def rect(self) -> pygame.rect.Rect:

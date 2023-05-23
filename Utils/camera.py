@@ -35,7 +35,9 @@ class Camera:
         img = pygame.transform.scale(self.image, (SCREEN_WIDTH, SCREEN_HEIGHT))
         self.display_surface.blit(img, (0, 0))
 
-    def update(self):
+    def update(self, dt):
+        for item in self.items:
+            item.update(dt)
         if self.initial_time:
             difference = (pygame.time.get_ticks() - self.initial_time) / 1000
             if difference >= 1:
@@ -73,7 +75,6 @@ class Camera:
                     img.blit(self.background, (col, row))
 
         for item in self.items:
-            item.update()
             if self.tracker is not None:
                 a, b = item.rect.topleft, self.tracker.rect.topleft
                 offset_pos = a[0] - b[0], a[1] - b[1]

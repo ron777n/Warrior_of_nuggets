@@ -156,7 +156,7 @@ class Editor:
         """
         starts the game loop
         """
-        self.camera.update()
+        self.camera.update(dt)
         self.camera.display()
         # self.draw()
         self.event_loop(dt)

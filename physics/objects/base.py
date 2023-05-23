@@ -8,7 +8,7 @@ class BaseObject(abc.ABC):
     rect: pygame.Rect
     image: pygame.Surface
 
-    def update(self):
+    def update(self, dt):
         pass
 
 

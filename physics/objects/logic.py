@@ -33,7 +33,7 @@ class Bullet(BaseObject):
         if hit_body is None:
             return
         hit_body.hit_global(vector.scale_to_length(1000), self.end_pos)
-        hit_body.effects.add(NoGravity())
+        hit_body.add_effect(NoGravity())
         rect_location = min(self.end_pos[0], spawn[0]), min(self.end_pos[1], spawn[1])
         rect_size = (self.end_pos - spawn).int_tuple
         rect_size = abs(rect_size[0]), abs(rect_size[1])

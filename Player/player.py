@@ -3,6 +3,7 @@ from typing import Optional
 import pygame
 import pymunk
 
+from physics.objects.effects import NoGravity
 from .Inventory import *
 from my_events import PLAYER_DIED_EVENT
 from physics.objects import Solid
@@ -88,8 +89,6 @@ class Player(Solid):
 
     @staticmethod
     def velocity_function(body: 'Player', gravity, damping, dt):
-        if not body.dash_timer.has_expired():
-            gravity = (0, 0)
         pymunk.Body.update_velocity(body, gravity, damping, dt)
         body.angular_velocity = 0.0
 
@@ -133,11 +132,12 @@ class Player(Solid):
 
     def dash(self):
         self.dash_timer.reset()
+        self.add_effect(NoGravity())
         self.set_speed((self.moving * self.PLAYER_SPEED * self.DASH_POWER, None))
         self.moving = 0
 
-    def update(self):
-        super().update()
+    def update(self, dt):
+        super().update(dt)
         if self.camera:
             self._rect.update(self.rect)
             mouse_pos = pymunk.Vec2d(*self.camera.get_mouse_pos())
