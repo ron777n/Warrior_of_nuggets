@@ -57,7 +57,7 @@ class FollowEffect(Effect):
     def effect(self, body: 'Solid', dt):
         if self.timer.has_expired():
             return False
-        body.hit_global((self.target.center - body.position).scale_to_length(self.power), body.position)
+        body.hit_global((self.target.center - body.position).scale_to_length(self.power) * dt - body.space.gravity * body.mass * dt, body.position)
         return True
         # diff = self.target.center - body.position
         # body.hit_global(diff, )

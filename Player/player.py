@@ -61,7 +61,7 @@ class Player(Solid):
         self.camera.append(self)
 
         self.effected_blocks: set[pymunk.Body] = set()
-        self.followMouseEffect = FollowEffect(100, self.camera.global_mouse_rect)
+        self.followMouseEffect = FollowEffect(300, self.camera.global_mouse_rect)
 
         # inventory
         self.inventory_active = False
