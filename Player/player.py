@@ -3,10 +3,10 @@ from typing import Optional
 import pygame
 import pymunk
 
-from physics.objects.effects import NoGravity
+from physics.objects.effects import FollowEffect, NoGravity
 from .Inventory import *
 from my_events import PLAYER_DIED_EVENT
-from physics.objects import Solid
+from physics.objects import ray_trace_first, Solid
 from settings import SCREEN_HEIGHT, SCREEN_WIDTH
 from Utils.camera import Camera
 from Utils.Timers import Timer
@@ -40,7 +40,7 @@ class Player(Solid):
     DASH_POWER = 5
     BASE_HEALTH = 100
 
-    def __init__(self, space, pos, *, camera: Optional[Camera] = None):
+    def __init__(self, space, pos, *, camera: Camera):
         super().__init__(space, pos, player_body(), body_type_name="DYNAMIC", image_path="sprites/Player/Player.png")
         self.hand_left = PlayerHand(True)
         self.hand_right = PlayerHand(True)
@@ -56,10 +56,12 @@ class Player(Solid):
         # camera
         self._rect = self.rect
         self.camera = camera
-        if camera is not None:
-            camera.tracker = Tracker(self._rect, pygame.Rect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT))
+        camera.tracker = Tracker(self._rect, pygame.Rect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT))
         self.looking_angle = 0
         self.camera.append(self)
+
+        self.effected_blocks: set[pymunk.Body] = set()
+        self.followMouseEffect = FollowEffect(100, self.camera.global_mouse_rect)
 
         # inventory
         self.inventory_active = False
@@ -114,12 +116,23 @@ class Player(Solid):
             elif event.key == pygame.K_TAB:
                 self.inventory_active = not self.inventory_active
             elif event.key == pygame.K_e:
-                print("GRAB HIM")
+                angle = self.camera.get_mouse_pos(mid=True)
+                hit = ray_trace_first(self.space, self.position, angle, self)
+                if hit is None or hit.shape.body.body_type == pymunk.Body.STATIC:
+                    return
+                hit_body = hit.shape.body
+                hit_body.add_effect(self.followMouseEffect)
+                if hit_body not in self.effected_blocks:
+                    self.effected_blocks.add(hit_body)
         elif event.type == pygame.KEYUP:
             if event.key == pygame.K_d and self.moving == 1:
                 self.moving = 0
             elif event.key == pygame.K_a and self.moving == -1:
                 self.moving = 0
+            elif event.key == pygame.K_e:
+                for effected_block in self.effected_blocks.copy():
+                    effected_block.remove_effect(self.followMouseEffect)
+                    self.effected_blocks.remove(effected_block)
         elif event.type == pygame.MOUSEBUTTONDOWN:
             self.inventory.use_selected_item(self.rect.center,
                                              self.camera.get_mouse_pos(event.pos, True),
@@ -148,7 +161,7 @@ class Player(Solid):
         if self.moving:
             self.set_speed((self.moving * self.PLAYER_SPEED, None))
 
-    def damage_local(self, amount, location_):
+    def damage_local(self, amount, location_=(0, 0)):
         self.health -= amount
         print(self.health)
         if self.health <= 0:

@@ -1,4 +1,6 @@
 # from physics.objects import Solid
+import pygame
+
 from Utils.Timers import Timer
 # from .bodies import Solid
 
@@ -6,8 +8,8 @@ from Utils.Timers import Timer
 class Effect:
     timeout: 1000
 
-    def __init__(self, *function, timeout=None):
-        self.functions = function
+    def __init__(self, *effects: 'Effect', timeout=None):
+        self.effects = effects
         if timeout is None:
             self.timer = Timer(self.timeout)
         else:
@@ -16,28 +18,46 @@ class Effect:
     def effect(self, body, dt):
         if self.timer.has_expired():
             return False
-        for function in self.functions:
-            function(body, dt)
+        for effect in self.effects:
+            effect.effect(body, dt)
         return True
 
     def __add__(self, other: 'Effect') -> 'Effect':
         timeout = min(self.timeout, other.timeout)
-        return Effect(self.effect, other.effect, timeout=timeout)
+        return Effect(*self.effects + (other,), timeout=timeout)
 
     def __hash__(self):
-        return hash(self.functions)
+        return hash(self.effects)
 
     def __eq__(self, other: 'Effect'):
-        return self.functions == other.functions
+        return self.effects == other.effects
 
 
 class NoGravity(Effect):
     timeout = 1000
 
     def __init__(self):
-        super().__init__(self.function)
+        super().__init__()
 
-    @staticmethod
-    def function(body: 'Solid', dt):
+    def effect(self, body, dt):
+        if self.timer.has_expired():
+            return False
         body.hit_global(-body.space.gravity * body.mass * dt, body.position)
+        return True
 
+
+class FollowEffect(Effect):
+    timeout = -1
+
+    def __init__(self, power=10, target=pygame.Rect):
+        super().__init__()
+        self.target = target
+        self.power = power
+
+    def effect(self, body: 'Solid', dt):
+        if self.timer.has_expired():
+            return False
+        body.hit_global((self.target.center - body.position).scale_to_length(self.power), body.position)
+        return True
+        # diff = self.target.center - body.position
+        # body.hit_global(diff, )

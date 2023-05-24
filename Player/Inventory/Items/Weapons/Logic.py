@@ -11,13 +11,13 @@ class Bullet(BaseObject):
     DE_SPAWN_TIMER = 10
 
     def __init__(self, source, camera, space, spawn, angle, effect=None):
-        vector = pymunk.Vec2d(1, 0).rotated_degrees(angle)
+        vector = pymunk.Vec2d(1000, 0).rotated_degrees(angle)
         self.start_pos = spawn
 
         hit: pymunk.SegmentQueryInfo
         hit = ray_trace_first(space, spawn, vector, source)
         if hit is None:
-            self.end_pos = spawn + vector.scale_to_length(1000)
+            self.end_pos = spawn + vector
             self.rect = self.create_camera_rect(spawn, self.end_pos)
 
             self.camera = camera
@@ -28,7 +28,7 @@ class Bullet(BaseObject):
         self.end_pos = hit.point
         if hit_body is None:
             return
-        hit_body.hit_global(vector.scale_to_length(1000), self.end_pos)
+        hit_body.hit_global(vector, self.end_pos)
         if effect is not None:
             hit_body.add_effect(effect)
         self.rect = self.create_camera_rect(spawn, self.end_pos)

@@ -8,6 +8,8 @@ class Timer:
         self.specifics = {specific: pygame.time.get_ticks() for specific in specifics}
 
     def has_expired(self, specific=None) -> bool:
+        if self.timeout < 0:
+            return False
         return (pygame.time.get_ticks() - self.specifics.get(specific, -self.timeout)) \
             > self.timeout
 

@@ -39,6 +39,9 @@ class Solid(BaseObject, pymunk.Body):
         else:
             self.effects.add(effect)
 
+    def remove_effect(self, effect):
+        self.effects.remove(effect)
+
     @property
     def rect(self) -> pygame.rect.Rect:
         inf = float("inf")
@@ -64,7 +67,7 @@ class Solid(BaseObject, pymunk.Body):
         if can_damage:
             self.damage_local(abs(impulse_vector), self.world_to_local(global_position))
 
-    def damage_local(self, power, position):
+    def damage_local(self, power, position=(0, 0)):
         pass
 
     def hit_local(self, impulse_vector, local_position, can_damage=False):

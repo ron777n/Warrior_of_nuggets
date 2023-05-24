@@ -29,6 +29,7 @@ class Camera:
         self.initial_cam_size = pygame.Vector2(cam_size)
         self.cam_size = pygame.Vector2(cam_size)
         self.target = pygame.Vector2(cam_size)
+        self.global_mouse_rect = pygame.Rect(1, 1, 1, 1)
         self.initial_time = 0
 
     def display(self):
@@ -36,6 +37,7 @@ class Camera:
         self.display_surface.blit(img, (0, 0))
 
     def update(self, dt):
+        self.global_mouse_rect.center = self.get_mouse_pos(global_pos=True)
         for item in self.items:
             item.update(dt)
         if self.initial_time:
@@ -88,8 +90,7 @@ class Camera:
         self.initial_time = pygame.time.get_ticks()
         self.initial_cam_size = self.cam_size
 
-    def get_mouse_pos(self, pos: Optional[tuple[float, float]] = None, global_pos=False, mid=False) -> \
-            tuple[float, float]:
+    def get_mouse_pos(self, pos: Optional[tuple[float, float]] = None, global_pos=False, mid=False) -> pymunk.Vec2d:
         if pos is None:
             pos = pygame.mouse.get_pos()
         x, y = pos
@@ -101,6 +102,6 @@ class Camera:
             x -= self.original_cam_size[0] // 2
             y -= self.original_cam_size[1] // 2
 
-        return x, y
+        return pymunk.Vec2d(x, y)
 
 

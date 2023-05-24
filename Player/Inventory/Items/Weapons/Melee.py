@@ -10,5 +10,5 @@ class Knife(Item):
         if button == pygame.BUTTON_LEFT:
             pass
         elif button == pygame.BUTTON_RIGHT:
-            self.owner.damage(20)
+            self.owner.damage_local(20)
         return False
