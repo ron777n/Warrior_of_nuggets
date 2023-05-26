@@ -29,7 +29,7 @@ class Game:
         self.space = pymunk.Space()
         self.space.gravity = (0, 10)
 
-        self.camera = Camera(("static", pygame.image.load("sprites/temp/background.jpg")),
+        self.camera = Camera(("repeat", pygame.image.load("sprites/temp/background.jpg")),
                              (SCREEN_WIDTH, SCREEN_HEIGHT))
         self.player: Optional[Player] = None
         self.debug_options = pymunk.pygame_util.DrawOptions(self.display_surface)

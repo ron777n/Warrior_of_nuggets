@@ -3,8 +3,7 @@ import math
 import pygame
 import pymunk
 
-from .base import BaseObject
-from .effects import Effect
+from .base import BaseObject, Effect
 
 DEFAULT_BLOCK_PATH = "sprites/objects/block.png"
 

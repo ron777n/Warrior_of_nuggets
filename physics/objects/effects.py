@@ -1,36 +1,7 @@
-# from physics.objects import Solid
 import pygame
 
-from Utils.Timers import Timer
-# from .bodies import Solid
-
-
-class Effect:
-    timeout: 1000
-
-    def __init__(self, *effects: 'Effect', timeout=None):
-        self.effects = effects
-        if timeout is None:
-            self.timer = Timer(self.timeout)
-        else:
-            self.timer = Timer(timeout)
-
-    def effect(self, body, dt):
-        if self.timer.has_expired():
-            return False
-        for effect in self.effects:
-            effect.effect(body, dt)
-        return True
-
-    def __add__(self, other: 'Effect') -> 'Effect':
-        timeout = min(self.timeout, other.timeout)
-        return Effect(*self.effects + (other,), timeout=timeout)
-
-    def __hash__(self):
-        return hash(self.effects)
-
-    def __eq__(self, other: 'Effect'):
-        return self.effects == other.effects
+from .base import Effect
+from .bodies import Solid
 
 
 class NoGravity(Effect):

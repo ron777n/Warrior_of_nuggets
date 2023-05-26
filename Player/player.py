@@ -121,8 +121,8 @@ class Player(Solid):
                 if hit is None or hit.shape.body.body_type == pymunk.Body.STATIC:
                     return
                 hit_body = hit.shape.body
-                hit_body.add_effect(self.followMouseEffect)
                 if hit_body not in self.effected_blocks:
+                    hit_body.add_effect(self.followMouseEffect)
                     self.effected_blocks.add(hit_body)
         elif event.type == pygame.KEYUP:
             if event.key == pygame.K_d and self.moving == 1:
@@ -132,7 +132,7 @@ class Player(Solid):
             elif event.key == pygame.K_e:
                 for effected_block in self.effected_blocks.copy():
                     effected_block.remove_effect(self.followMouseEffect)
-                    self.effected_blocks.remove(effected_block)
+                self.effected_blocks.clear()
         elif event.type == pygame.MOUSEBUTTONDOWN:
             self.inventory.use_selected_item(self.rect.center,
                                              self.camera.get_mouse_pos(event.pos, True),
