@@ -8,7 +8,7 @@ import pymunk
 from pymunk import pygame_util
 
 import level
-from my_events import PLAYER_DIED_EVENT
+from CONSTANTS import PLAYER_DIED_EVENT
 from physics.objects import Solid
 from Utils.Gui.Menus.EditorMenu import EditorTile
 from Player import Player

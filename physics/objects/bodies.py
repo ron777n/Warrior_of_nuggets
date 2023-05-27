@@ -10,6 +10,7 @@ DEFAULT_BLOCK_PATH = "sprites/objects/block.png"
 
 class Solid(BaseObject, pymunk.Body):
     base_image: pygame.surface.Surface
+    base_mana: float = 1
 
     def __init__(self, space: pymunk.Space, position,
                  *shapes, body_type_name: str = "STATIC", mass=0, moment=0, image_path=DEFAULT_BLOCK_PATH):
@@ -24,6 +25,20 @@ class Solid(BaseObject, pymunk.Body):
         self.base_image: pygame.Surface = pygame.transform.scale(pygame.image.load(image_path), self.rect.size)
         self.position = pymunk.vec2d.Vec2d(*position)
         space.add(self, *self.shapes)
+
+        self._mana = self.base_mana
+
+    @property
+    def mana(self):
+        return int(self._mana)
+
+    @mana.setter
+    def mana(self, value):
+        if value < 0:
+            raise TypeError("Mana value can not be negative")
+        if value < self._mana and hasattr(self, "mana_regen_timer"):
+            self.mana_regen_timer.reset()
+        self._mana = min(value, self.base_mana)
 
     def update(self, dt):
         for effect in self.effects.copy():
@@ -69,7 +84,7 @@ class Solid(BaseObject, pymunk.Body):
     def damage_local(self, power, position=(0, 0)):
         pass
 
-    def hit_local(self, impulse_vector, local_position, can_damage=False):
+    def hit_local(self, impulse_vector, local_position=(0, 0), can_damage=False):
         if self.body_type == pymunk.Body.STATIC:
             return
         self.apply_impulse_at_local_point(impulse_vector, local_position)

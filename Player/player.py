@@ -3,9 +3,11 @@ from typing import Optional
 import pygame
 import pymunk
 
+from physics.Magic import Magic, PushMagic
+from physics.Magic.MagicTypes import HoldMagic
 from physics.objects.effects import FollowEffect, NoGravity
 from .Inventory import *
-from my_events import PLAYER_DIED_EVENT
+from CONSTANTS import PLAYER_DIED_EVENT
 from physics.objects import ray_trace_first, Solid
 from settings import SCREEN_HEIGHT, SCREEN_WIDTH
 from Utils.camera import Camera
@@ -34,24 +36,34 @@ class PlayerHand:
 
 
 class Player(Solid):
-    PLAYER_SPEED = 17
+    PLAYER_SPEED = 20
     DASH_COOL_DOWN = 700
     DOUBLE_PRESS_COOL_DOWN = 200
     DASH_POWER = 5
     BASE_HEALTH = 100
+    MANA_REGEN_COOL_DOWN = 500
+    HEALTH_REGEN_COOL_DOWN = 1000
+
+    unlocked_magics: dict[str, Magic] = {}
+
+    base_mana = 100
 
     def __init__(self, space, pos, *, camera: Camera):
         super().__init__(space, pos, player_body(), body_type_name="DYNAMIC", image_path="sprites/Player/Player.png")
         self.hand_left = PlayerHand(True)
         self.hand_right = PlayerHand(True)
 
+        # timers:
+        self.double_tap_timer = Timer(self.DOUBLE_PRESS_COOL_DOWN, ("d", "a"))
+        self.mana_regen_timer = Timer(self.MANA_REGEN_COOL_DOWN)
+        self.health_regen_timer = Timer(self.HEALTH_REGEN_COOL_DOWN)
+
+        # movement
         self.jump = False
         self.moving = 0
-        self.double_tap_timer = Timer(self.DOUBLE_PRESS_COOL_DOWN, ("d", "a"))
         self.dash_timer = Timer(self.DASH_COOL_DOWN)
         self.velocity_func = self.velocity_function
         self.position_func = self.position_function
-        self.health = self.BASE_HEALTH
 
         # camera
         self._rect = self.rect
@@ -60,8 +72,11 @@ class Player(Solid):
         self.looking_angle = 0
         self.camera.append(self)
 
-        self.effected_blocks: set[pymunk.Body] = set()
-        self.followMouseEffect = FollowEffect(300, self.camera.global_mouse_rect)
+        # Player Data
+        self.health = self.BASE_HEALTH
+        self.unlocked_magics['f'] = PushMagic(self)
+        self.unlocked_magics['e'] = HoldMagic(self, self.camera.global_mouse_rect)
+        self.active_magics: set[Magic] = set()
 
         # inventory
         self.inventory_active = False
@@ -99,6 +114,20 @@ class Player(Solid):
         pymunk.Body.update_position(body, dt)
         body.angle = 0
 
+    def try_use_magic(self, key, finish=False):
+        target_magic = self.unlocked_magics.get(key)
+        if not target_magic:
+            return
+        if finish:
+            if target_magic.finish_cast():
+                self.active_magics.remove(target_magic)
+        else:
+            if target_magic.cast():
+                self.active_magics.add(target_magic)
+        # if hit_body not in self.effected_blocks:
+        #     hit_body.add_effect(self.followMouseEffect)
+        #     self.effected_blocks.add(hit_body)
+
     def handle_event(self, event: pygame.event.Event):
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_d:
@@ -115,24 +144,15 @@ class Player(Solid):
                 self.set_speed((None, -40))
             elif event.key == pygame.K_TAB:
                 self.inventory_active = not self.inventory_active
-            elif event.key == pygame.K_e:
-                angle = self.camera.get_mouse_pos(mid=True)
-                hit = ray_trace_first(self.space, self.position, angle, self)
-                if hit is None or hit.shape.body.body_type == pymunk.Body.STATIC:
-                    return
-                hit_body = hit.shape.body
-                if hit_body not in self.effected_blocks:
-                    hit_body.add_effect(self.followMouseEffect)
-                    self.effected_blocks.add(hit_body)
+            else:
+                self.try_use_magic(event.unicode)
         elif event.type == pygame.KEYUP:
             if event.key == pygame.K_d and self.moving == 1:
                 self.moving = 0
             elif event.key == pygame.K_a and self.moving == -1:
                 self.moving = 0
-            elif event.key == pygame.K_e:
-                for effected_block in self.effected_blocks.copy():
-                    effected_block.remove_effect(self.followMouseEffect)
-                self.effected_blocks.clear()
+            else:
+                self.try_use_magic(event.unicode, True)
         elif event.type == pygame.MOUSEBUTTONDOWN:
             self.inventory.use_selected_item(self.rect.center,
                                              self.camera.get_mouse_pos(event.pos, True),
@@ -160,13 +180,24 @@ class Player(Solid):
             self.looking_angle = -int(diff_vector.angle_degrees)
         if self.moving:
             self.set_speed((self.moving * self.PLAYER_SPEED, None))
+        if self.health_regen_timer.has_expired():
+            self.health += 10 * dt
+        if self.mana_regen_timer.has_expired():
+            self.mana += 10 * dt
+        for magic in self.active_magics:
+            if not magic.update(dt):
+                self.active_magics.remove(magic)
 
     def damage_local(self, amount, location_=(0, 0)):
         self.health -= amount
-        print(self.health)
-        if self.health <= 0:
-            pygame.event.post(pygame.event.Event(PLAYER_DIED_EVENT))
+        self.health_regen_timer.reset()
 
-    def heal(self, amount):
-        self.health = min(self.BASE_HEALTH, self.health + amount)
-        print(self.health)
+    @property
+    def health(self):
+        if self._health <= 0:
+            pygame.event.post(pygame.event.Event(PLAYER_DIED_EVENT))
+        return int(self._health)
+
+    @health.setter
+    def health(self, value):
+        self._health = min(self.BASE_HEALTH, value)

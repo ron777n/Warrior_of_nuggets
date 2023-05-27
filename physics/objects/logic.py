@@ -14,6 +14,10 @@ def ray_trace(space, spawn, angle, shape_filter=pymunk.ShapeFilter()):
 
 
 def ray_trace_first(space, spawn, angle, target_filter) -> Optional[pymunk.SegmentQueryInfo]:
+    """
+
+    @rtype: object
+    """
     if isinstance(target_filter, pymunk.ShapeFilter):
         target = None
     else:
