@@ -46,7 +46,7 @@ class HoldMagic(Magic):
             return False
         self.target_body.hit_global((self.target_rect.center - self.target_body.position).scale_to_length(100) * dt - self.target_body.space.gravity * self.target_body.mass * dt, self.target_body.position)
         # target_body.
-        self.source.mana -= self.mana_usage
+        self.source.mana -= self.mana_usage * dt
         return True
 
     def finish_cast(self):
