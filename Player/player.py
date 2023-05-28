@@ -17,7 +17,7 @@ from .PlayerMenu import PlayerMenu
 
 
 def player_body() -> pymunk.Shape:
-    shape: pygame.Poly = pymunk.Poly.create_box(None, (100, 180))
+    shape: pymunk.Poly = pymunk.Poly.create_box(None, (100, 180))
     shape.mass = 100
     shape.friction = 0.7
     return shape
@@ -80,7 +80,7 @@ class Player(Solid):
         self.active_magics: set[Magic] = set()
 
         # Menu
-        self.player_menu = PlayerMenu()
+        self.player_menu = PlayerMenu(self)
 
         # items
         self.player_menu.inventory.add_item(ShotGun(self.space, self.camera, self))

@@ -1,17 +1,29 @@
+import pygame
+
+# from Player import Player
 from Player.Inventory import Inventory
-from Utils.Gui import Menu
+from Utils.Gui import Menu, Text
 
 
 class InGameMenu(Menu):
-    pass
+    def __init__(self, player, inventory: Inventory):
+        self.player = player
+        self.inventory = inventory
 
+    def display(self, display_surface):
+        selected_item = self.inventory.selected_item
+        if selected_item is not None:
+            display_surface.blit(selected_item.image, (0, 0))
+        hp = self.player.health
+        health_text = Text(str(hp), color=(0, 0, 0))
+        health_text.draw(display_surface, ('center',))
 
 class PlayerMenu(Menu):
     # active_menu: Menu = False
 
-    def __init__(self, ):
-        self.inventory = Inventory()
-        self.game_menu = InGameMenu()
+    def __init__(self, player):
+        self.inventory = Inventory(player)
+        self.game_menu = InGameMenu(player, self.inventory)
         self._active_menu = self.game_menu
 
     @property

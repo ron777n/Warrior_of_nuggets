@@ -33,7 +33,7 @@ class Item:
 
 
 class Inventory(Gui.Menu):
-    def __init__(self):
+    def __init__(self, _player):
         screen_size = SCREEN_WIDTH, SCREEN_HEIGHT
         inventory_size = screen_size[0] // 2, screen_size[1] // 2
         self.rect = pygame.Rect(screen_size[0] // 4, screen_size[1] // 4, *inventory_size)
@@ -79,6 +79,10 @@ class Inventory(Gui.Menu):
         elif r and button_type == pygame.BUTTON_RIGHT:
             self.current_item_index = inventory_id
         return r
+
+    @property
+    def selected_item(self):
+        return self.items[self.current_item_index]
 
     def use_selected_item(self, start_pos, end_pos, button: int, down: bool):
         item = self.items[self.current_item_index]
