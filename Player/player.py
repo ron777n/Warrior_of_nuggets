@@ -13,6 +13,7 @@ from settings import SCREEN_HEIGHT, SCREEN_WIDTH
 from Utils.camera import Camera
 from Utils.Timers import Timer
 from Utils.trackers import Tracker
+from .PlayerMenu import PlayerMenu
 
 
 def player_body() -> pymunk.Shape:
@@ -78,15 +79,16 @@ class Player(Solid):
         self.unlocked_magics['e'] = HoldMagic(self, self.camera.global_mouse_rect)
         self.active_magics: set[Magic] = set()
 
-        # inventory
-        self.inventory_active = False
-        self.inventory = Inventory()
-        self.inventory.add_item(ShotGun(self.space, self.camera, self))
-        self.inventory.add_item(ShotGun(self.space, self.camera, self))
-        self.inventory.add_item(Nugget(self.space, self.camera, self))
-        self.inventory.add_item(Nugget(self.space, self.camera, self))
-        self.inventory.add_item(Knife(self.space, self.camera, self))
-        self.inventory.add_item(Nugget(self.space, self.camera, self))
+        # Menu
+        self.player_menu = PlayerMenu()
+
+        # items
+        self.player_menu.inventory.add_item(ShotGun(self.space, self.camera, self))
+        self.player_menu.inventory.add_item(ShotGun(self.space, self.camera, self))
+        self.player_menu.inventory.add_item(Nugget(self.space, self.camera, self))
+        self.player_menu.inventory.add_item(Nugget(self.space, self.camera, self))
+        self.player_menu.inventory.add_item(Knife(self.space, self.camera, self))
+        self.player_menu.inventory.add_item(Nugget(self.space, self.camera, self))
 
     @property
     def image(self):
@@ -140,7 +142,10 @@ class Player(Solid):
             elif event.key == pygame.K_SPACE:
                 self.set_speed((None, -40))
             elif event.key == pygame.K_TAB:
-                self.inventory_active = not self.inventory_active
+                if self.player_menu.active_menu == "Game":
+                    self.player_menu.active_menu = "Inventory"
+                else:
+                    self.player_menu.active_menu = "Game"
             else:
                 self.try_use_magic(event.unicode)
         elif event.type == pygame.KEYUP:
@@ -151,10 +156,10 @@ class Player(Solid):
             else:
                 self.try_use_magic(event.unicode, True)
         elif event.type == pygame.MOUSEBUTTONDOWN:
-            self.inventory.use_selected_item(self.rect.center,
-                                             self.camera.get_mouse_pos(global_pos=True),
-                                             event.button,
-                                             True)
+            self.player_menu.inventory.use_selected_item(self.rect.center,
+                                                         self.camera.get_mouse_pos(global_pos=True),
+                                                         event.button,
+                                                         True)
 
     def set_speed(self, speed: tuple[Optional[int], Optional[int]]):
         if speed[0] is not None:

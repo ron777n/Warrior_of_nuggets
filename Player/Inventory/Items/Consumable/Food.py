@@ -13,7 +13,7 @@ class Nugget(Item):
     def use_item(self, start_pos, end_pos, button: int, down: bool) -> bool:
         if button == pygame.BUTTON_LEFT and down:
             print("EAT NUGGET")
-            self.owner.heal(30)
+            self.owner.health += 30
             self.count -= 1
             if not self.count:
                 return True

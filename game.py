@@ -89,15 +89,12 @@ class Game:
             elif event.key == pygame.K_MINUS:
                 self.camera.zoom(0.5)
         elif event.type == pygame.MOUSEBUTTONDOWN:
-            if self.player.inventory_active:
-                if self.player.inventory.click(event.pos, event.button, True):
-                    return
+            if self.player.player_menu.click(event.pos, event.button, True):
+                return
         elif event.type == pygame.MOUSEBUTTONUP:
-            if self.player.inventory_active:
-                if self.player.inventory.click(event.pos, event.button, False):
-                    return
+            if self.player.player_menu.click(event.pos, event.button, False):
+                return
         self.player.handle_event(event)
 
     def display_menus(self):
-        if self.player.inventory_active:
-            self.player.inventory.display(self.display_surface)
+        self.player.player_menu.display(self.display_surface)
