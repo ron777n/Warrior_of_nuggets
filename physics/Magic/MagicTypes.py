@@ -5,6 +5,8 @@ from ..objects import exclusion_filter, ray_trace_first, Solid
 
 
 class PushMagic(Magic):
+    mana_usage = 30
+
     def cast(self):
         if not super().cast():
             return False
@@ -19,6 +21,8 @@ class PushMagic(Magic):
 
 
 class HoldMagic(Magic):
+    mana_usage = 3
+
     def __init__(self, source: Solid, target_rect):
         super().__init__(source)
         self.target_rect = target_rect
@@ -36,7 +40,13 @@ class HoldMagic(Magic):
         return True
 
     def update(self, dt):
+        print(self.source.mana)
+        if self.source.mana < self.mana_usage:
+            self.target_body = None
+            return False
         self.target_body.hit_global((self.target_rect.center - self.target_body.position).scale_to_length(100) * dt - self.target_body.space.gravity * self.target_body.mass * dt, self.target_body.position)
+        # target_body.
+        self.source.mana -= self.mana_usage
         return True
 
     def finish_cast(self):

@@ -181,9 +181,13 @@ class Player(Solid):
             self.health += 10 * dt
         if self.mana_regen_timer.has_expired():
             self.mana += 10 * dt
+        to_remove: list[Magic] = []
         for magic in self.active_magics:
             if not magic.update(dt):
-                self.active_magics.remove(magic)
+                to_remove.append(magic)
+        for magic in to_remove:
+            magic.finish_cast()
+            self.active_magics.remove(magic)
 
     def damage_local(self, amount, location_=(0, 0)):
         self.health -= amount
