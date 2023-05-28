@@ -124,9 +124,6 @@ class Player(Solid):
         else:
             if target_magic.cast():
                 self.active_magics.add(target_magic)
-        # if hit_body not in self.effected_blocks:
-        #     hit_body.add_effect(self.followMouseEffect)
-        #     self.effected_blocks.add(hit_body)
 
     def handle_event(self, event: pygame.event.Event):
         if event.type == pygame.KEYDOWN:
@@ -155,7 +152,7 @@ class Player(Solid):
                 self.try_use_magic(event.unicode, True)
         elif event.type == pygame.MOUSEBUTTONDOWN:
             self.inventory.use_selected_item(self.rect.center,
-                                             self.camera.get_mouse_pos(event.pos, True),
+                                             self.camera.get_mouse_pos(global_pos=True),
                                              event.button,
                                              True)
 

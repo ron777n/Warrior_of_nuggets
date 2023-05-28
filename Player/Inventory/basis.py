@@ -83,6 +83,6 @@ class Inventory(Gui.Menu):
     def use_selected_item(self, start_pos, end_pos, button: int, down: bool):
         item = self.items[self.current_item_index]
         if item is not None:
-            should_delete = item.use_item(start_pos, end_pos - start_pos, button, down)
+            should_delete = item.use_item(start_pos, end_pos, button, down)
             if should_delete:
                 self.items[self.current_item_index] = None
