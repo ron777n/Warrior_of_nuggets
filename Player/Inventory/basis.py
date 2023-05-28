@@ -1,3 +1,4 @@
+import math
 from typing import Optional
 
 import pygame
@@ -33,32 +34,47 @@ class Item:
 
 
 class Inventory(Gui.Menu):
+    tile_image = pygame.image.load("sprites/Gui/Inventory/ItemSlot.png")
+    background_image = pygame.image.load("sprites/Gui/Inventory/background.png")
+
     def __init__(self, _player):
         screen_size = SCREEN_WIDTH, SCREEN_HEIGHT
-        inventory_size = screen_size[0] // 2, screen_size[1] // 2
+        inventory_size = self.background_image.get_size()
+        self.box_size = inventory_size
         self.rect = pygame.Rect(screen_size[0] // 4, screen_size[1] // 4, *inventory_size)
-        self.max_items = 8
-        self.items: list[Optional[Item]] = [None] * self.max_items * self.max_items
+        self.bag_count = 64
+        self.bag: list[Optional[Item]] = [None] * self.bag_count
         self.current_item_index = 0
-        self.box_size = 64
+        # size^2 = (width * height)/bag_count
+        self.bag_tile_size = math.sqrt(self.box_size[0] * self.box_size[1] / self.bag_count)
+        self.bag_row_count = self.box_size[0] / self.bag_tile_size
+        self.bag_col_count = self.box_size[1] / self.bag_tile_size
+        self.tile_image = pygame.transform.scale(self.tile_image, (self.bag_tile_size, self.bag_tile_size))
+
+        self.hand_left = [None] * 3
+        self.hand_right = [None] * 3
         self.holding = None
 
     def display(self, display_surface: pygame.Surface):
-        img = pygame.Surface(self.rect.size)
-        img.fill("red")
-        for i, item in enumerate(self.items):
+        img = self.background_image.copy()
+        for i, item in enumerate(self.bag):
+            image_rect = pygame.Rect((i * self.bag_tile_size) % self.box_size[0],
+                                     (i * self.bag_tile_size) // self.box_size[1],
+                                     self.bag_tile_size, self.bag_tile_size)
+            tile_image = self.tile_image.copy()
+            print(image_rect, tile_image)
             if item is None:
+                img.blit(tile_image, image_rect)
                 continue
-            image_rect = pygame.Rect((i % self.max_items) * self.box_size, (i // self.max_items) * self.box_size,
-                                     self.box_size, self.box_size)
-            item_img = pygame.transform.scale(item.image, image_rect.size)
-            img.blit(item_img, image_rect)
+            tile_image.blit(item.image, image_rect)
+            img.blit(tile_image, image_rect)
+            # item_img = pygame.transform.scale(item.image, image_rect.size)
         display_surface.blit(img, self.rect)
 
     def add_item(self, item_to_add: Item) -> bool:
-        for i, item in enumerate(self.items):
+        for i, item in enumerate(self.bag):
             if item is None:
-                self.items[i] = item_to_add
+                self.bag[i] = item_to_add
                 return True
             if type(item) == type(item_to_add):
                 if item.add_to_item(item_to_add):
@@ -67,6 +83,7 @@ class Inventory(Gui.Menu):
 
     def click(self, location: tuple[int, int], button_type: int, down: bool) -> bool:
         r = self.rect.collidepoint(location)
+        return r
         inventory_id = (location[0] - self.rect.left) // self.box_size, (location[1] - self.rect.top) // self.box_size
         inventory_id = inventory_id[0] + inventory_id[1] * self.max_items
         if r and button_type == pygame.BUTTON_LEFT:
@@ -82,11 +99,11 @@ class Inventory(Gui.Menu):
 
     @property
     def selected_item(self):
-        return self.items[self.current_item_index]
+        return self.bag[self.current_item_index]
 
     def use_selected_item(self, start_pos, end_pos, button: int, down: bool):
-        item = self.items[self.current_item_index]
+        item = self.selected_item
         if item is not None:
             should_delete = item.use_item(start_pos, end_pos, button, down)
             if should_delete:
-                self.items[self.current_item_index] = None
+                self.bag[self.current_item_index] = None
