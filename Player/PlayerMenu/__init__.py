@@ -11,9 +11,14 @@ class InGameMenu(Menu):
         self.inventory = inventory
 
     def display(self, display_surface):
-        selected_item = self.inventory.selected_item
-        if selected_item is not None:
-            display_surface.blit(selected_item.image, (0, 0))
+        hand_left = self.inventory.hot_bar.items[0]
+        hand_right = self.inventory.hot_bar.items[1]
+        for i, item in enumerate(hand_left):
+            if item is not None:
+                display_surface.blit(pygame.transform.scale(item.image, (50, 50)), (i * 50, 0))
+        for i, item in enumerate(hand_right):
+            if item is not None:
+                display_surface.blit(pygame.transform.scale(item.image, (50, 50)), (i * 50 + 25 + 50 * 3, 0))
         hp = self.player.health
         health_text = Text(str(hp), color=(0, 0, 0))
         health_text.draw(display_surface, ('center',))

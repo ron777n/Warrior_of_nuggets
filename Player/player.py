@@ -156,7 +156,7 @@ class Player(Solid):
             else:
                 self.try_use_magic(event.unicode, True)
         elif event.type == pygame.MOUSEBUTTONDOWN:
-            self.player_menu.inventory.use_selected_item(self.rect.center,
+            self.player_menu.inventory.use_selected_item(False, self.rect.center,
                                                          self.camera.get_mouse_pos(global_pos=True),
                                                          event.button,
                                                          True)
