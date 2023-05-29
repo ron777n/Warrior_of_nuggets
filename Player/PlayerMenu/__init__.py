@@ -18,6 +18,7 @@ class InGameMenu(Menu):
         health_text = Text(str(hp), color=(0, 0, 0))
         health_text.draw(display_surface, ('center',))
 
+
 class PlayerMenu(Menu):
     # active_menu: Menu = False
 
